@@ -10,6 +10,7 @@ import com.intellij.database.util.DasUtil
  *   FILES       files helper
  */
 
+packageName = "com.sample"
 typeMapping = [
         (~/(?i)int/)                      : "long",
         (~/(?i)float|double|decimal|real/): "double",
@@ -24,18 +25,17 @@ FILES.chooseDirectoryAndSave("Choose directory", "Choose where to store generate
 }
 
 def generate(table, dir) {
-    def basePackage = "com.yalonglee.learning.security"
     def tableName = table.getName()
     def className = javaName(table.getName(), true)
     def fields = calcFields(table)
-    new File(dir, className + "Mapper.xml").withPrintWriter { out -> generate(basePackage, out, tableName, className, fields) }
+    new File(dir, className + "Mapper.xml").withPrintWriter { out -> generate(out, tableName, className, fields) }
 }
 
-def generate(basePackage, out, tableName, className, fields) {
+def generate(out, tableName, className, fields) {
     int index = 0
     out.println "<?xml version='1.0' encoding='UTF-8' ?>"
     out.println "<!DOCTYPE mapper PUBLIC '-//mybatis.org//DTD Mapper 3.0//EN' 'http://mybatis.org/dtd/mybatis-3-mapper.dtd' >"
-    out.println "<mapper namespace='${basePackage}.mapper.${className}Mapper'>"
+    out.println "<mapper namespace='${packageName}.mapper.${className}Mapper'>"
     out.println "    <sql id='Base_Column_List' >"
     out.print "    "
     fields.each() {
@@ -47,14 +47,14 @@ def generate(basePackage, out, tableName, className, fields) {
     }
     out.println ""
     out.println "    </sql>"
-    out.println "    <select id='selectByPrimaryKey' resultType='${basePackage}.model.${className}' parameterType='java.lang.Long'>"
+    out.println "    <select id='selectByPrimaryKey' resultType='${packageName}.model.${className}' parameterType='java.lang.Long'>"
     out.println "        select "
     out.println "        <include refid= 'Base_Column_List' />"
     out.println "        from ${tableName} "
     out.println "        where id = #{id}"
     out.println "    </select>"
     out.println ""
-    out.println "    <select id='selectByQurey' resultType='${className}' parameterType='java.util.Map'>"
+    out.println "    <select id='selectByQuery' resultType='${packageName}.model.${className}' parameterType='java.util.Map'>"
     out.println "        select "
     out.println "        <include refid= 'Base_Column_List' />"
     out.println "        from ${tableName} "

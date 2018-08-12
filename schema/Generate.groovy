@@ -39,6 +39,9 @@ def generate(out, className, tableName, fields) {
     out.println ""
     out.println "tableName: ${tableName}"
     out.println ""
+    fields.each() {
+        out.println "default: ${it.default}"
+    }
     out.println "}"
 }
 
@@ -50,6 +53,7 @@ def calcFields(table) {
                            name   : javaName(col.getName(), false),
                            type   : typeStr,
                            comment: col.getComment(),
+                           default: col.getDefault(),
                            annos  : ""]]
     }
 }
