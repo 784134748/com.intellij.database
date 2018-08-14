@@ -12,11 +12,11 @@ import com.intellij.database.util.DasUtil
 
 packageName = "com.yalonglee.learning.security"
 typeMapping = [
-        (~/(?i)int/)                      : "Long",
-        (~/(?i)float|double|decimal|real/): "Double",
-        (~/(?i)datetime|timestamp/)       : "java.time.LocalDateTime",
-        (~/(?i)date/)                     : "java.time.LocalDate",
-        (~/(?i)time/)                     : "java.time.LocalTime",
+        (~/(?i)int/)                      : "long",
+        (~/(?i)float|double|decimal|real/): "double",
+        (~/(?i)datetime|timestamp/)       : "java.sql.Timestamp",
+        (~/(?i)date/)                     : "java.sql.Date",
+        (~/(?i)time/)                     : "java.sql.Time",
         (~/(?i)/)                         : "String"
 ]
 
@@ -27,41 +27,30 @@ FILES.chooseDirectoryAndSave("Choose directory", "Choose where to store generate
 def generate(table, dir) {
     def className = javaName(table.getName(), true)
     def fields = calcFields(table)
-    new File(dir, className + ".java").withPrintWriter { out -> generate(out, className, fields) }
+    new File(dir, className + "Mapper.java").withPrintWriter { out -> generate(out, className, fields) }
 }
 
 def generate(out, className, fields) {
-    out.println "package ${packageName}.model;"
+    out.println "package ${packageName}.mapper;"
     out.println ""
-    out.println "import io.swagger.annotations.ApiModel;"
-    out.println "import io.swagger.annotations.ApiModelProperty;"
-    out.println "import lombok.*;"
+    out.println "import ${packageName}.model.${className};"
+    out.println "import org.apache.ibatis.annotations.Mapper;"
+    out.println "import org.apache.ibatis.annotations.Param;"
     out.println ""
-    out.println "import java.io.Serializable;"
-    out.println "import java.time.*;"
+    out.println "import java.util.Map;"
     out.println ""
-    out.println "@Data"
-    out.println "@Builder"
-    out.println "@NoArgsConstructor"
-    out.println "@AllArgsConstructor"
-    out.println "@ApiModel(value = \"$className\")"
-    out.println "public class $className implements Serializable {"
+    out.println "@Mapper"
+    out.println "public interface ${className}Mapper {"
     out.println ""
-    out.println "  public static final long serialVersionUID = 1L;"
+    out.println "  ${className} selectByPrimaryKey(@Param(\"id\") Long id);"
     out.println ""
-    fields.each() {
-        if (it.commoent != "") {
-            out.println " /**"
-            out.println "  * ${it.comment}"
-            out.println "  */"
-        }
-        if (it.commoent != "") {
-            out.println "  @ApiModelProperty(value = \"${it.comment}\")"
-        }
-        if (it.annos != "") out.println "  ${it.annos}"
-        out.println "  private ${it.type} ${it.name};"
-        out.println ""
-    }
+    out.println "  void deleteByPrimaryKey(@Param(\"id\") Long id);"
+    out.println ""
+    out.println "  Integer count(Map<String, Object> param);"
+    out.println ""
+    out.println "  Long insert(Map<String, Object> param);"
+    out.println ""
+    out.println "  void update(Map<String, Object> param);"
     out.println ""
     out.println "}"
 }
@@ -85,4 +74,3 @@ def javaName(str, capitalize) {
             .replaceAll(/[^\p{javaJavaIdentifierPart}[_]]/, "_")
     capitalize || s.length() == 1 ? s : Case.LOWER.apply(s[0]) + s[1..-1]
 }
-

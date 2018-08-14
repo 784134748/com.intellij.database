@@ -10,7 +10,7 @@ import com.intellij.database.util.DasUtil
  *   FILES       files helper
  */
 
-packageName = "com.sample"
+packageName = "com.yalonglee.learning.security"
 typeMapping = [
         (~/(?i)int/)                      : "long",
         (~/(?i)float|double|decimal|real/): "double",

@@ -10,7 +10,7 @@ import com.intellij.database.util.DasUtil
  *   FILES       files helper
  */
 
-packageName = "com.sample;"
+packageName = "com.yalonglee.learning.security"
 typeMapping = [
         (~/(?i)int/)                      : "long",
         (~/(?i)float|double|decimal|real/): "double",
@@ -31,21 +31,29 @@ def generate(table, dir) {
 }
 
 def generate(out, className, fields) {
-    out.println "package $packageName"
+    out.println "package ${packageName}.mapper;"
     out.println ""
+    out.println "import ${packageName}.model.${className};"
+    out.println "import org.apache.ibatis.annotations.Mapper;"
+    out.println "import org.apache.ibatis.annotations.Param;"
     out.println ""
+    out.println "import java.util.List;"
+    out.println "import java.util.Map;"
+    out.println ""
+    out.println "@Mapper"
     out.println "public interface ${className}Mapper {"
     out.println ""
-    out.println "  int insert${className}(${className} object);"
+    out.println "  ${className} selectByPrimaryKey(@Param(\"id\") Long id);"
     out.println ""
-    out.println "  List<${className}> query${className}(${className} object);"
+    out.println "  List<${className}> selectByQuery(Map<String, Object> param);"
     out.println ""
-    out.println "  ${className} query${className}Limit(${className} object);"
+    out.println "  void deleteByPrimaryKey(@Param(\"id\") Long id);"
     out.println ""
-    out.println "  int update${className}(${className} object);"
+    out.println "  Integer count(Map<String, Object> param);"
     out.println ""
-    out.println "  int update(${className}.UpdateBuilder object);"
+    out.println "  Long insert(Map<String, Object> param);"
     out.println ""
+    out.println "  void update(Map<String, Object> param);"
     out.println ""
     out.println "}"
 }
