@@ -12,7 +12,8 @@ import com.intellij.database.util.DasUtil
 
 packageName = "com.yalonglee.learning.security"
 typeMapping = [
-        (~/(?i)int/)                      : "Long",
+        (~/(?i)bigint/)                   : "Long",
+        (~/(?i)int/)                      : "Integer",
         (~/(?i)float|double|decimal|real/): "Double",
         (~/(?i)datetime|timestamp/)       : "java.time.LocalDateTime",
         (~/(?i)date/)                     : "java.time.LocalDate",
