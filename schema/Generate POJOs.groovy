@@ -52,11 +52,11 @@ def generate(out, className, fields) {
     fields.each() {
         if (it.commoent != "") {
             out.println " /**"
-            out.println "  * ${it.comment}"
+            out.println "  * ${it.comment}【${it.dataType}】"
             out.println "  */"
         }
         if (it.commoent != "") {
-            out.println "  @ApiModelProperty(value = \"${it.comment}\")"
+            out.println "  @ApiModelProperty(value = \"${it.comment}\", dataType = \"${it.dataType}\")"
         }
         if (it.annos != "") out.println "  ${it.annos}"
         out.println "  private ${it.type} ${it.name};"
@@ -72,6 +72,7 @@ def calcFields(table) {
         def typeStr = typeMapping.find { p, t -> p.matcher(spec).find() }.value
         fields += [[
                            name   : javaName(col.getName(), false),
+                           dataType : col.getDataType(),
                            type   : typeStr,
                            comment: col.getComment(),
                            annos  : ""]]
