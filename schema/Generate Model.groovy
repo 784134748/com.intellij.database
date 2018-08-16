@@ -10,7 +10,7 @@ import com.intellij.database.util.DasUtil
  *   FILES       files helper
  */
 
-packageName = "com.yalonglee.learning.security"
+packageName = ""
 typeMapping = [
         (~/(?i)bigint/)                   : "Long",
         (~/(?i)int/)                      : "Integer",
@@ -26,12 +26,19 @@ FILES.chooseDirectoryAndSave("Choose directory", "Choose where to store generate
 }
 
 def generate(table, dir) {
+    int index = dir.toString().lastIndexOf("/src/main/java/")
+    if (index != -1) {
+        packageName = dir.toString().substring(index + 15).replaceAll("/", ".")
+    }
     def className = javaName(table.getName(), true)
     def fields = calcFields(table)
-    new File(dir, className + ".java").withPrintWriter { out -> generate(out, className, fields) }
+    def modelDir = dir.toString() + "/model/"
+    def modelFile = new File(modelDir)
+    modelFile.mkdir()
+    new File(modelDir, className + ".java").withPrintWriter { out -> model(out, className, fields) }
 }
 
-def generate(out, className, fields) {
+def model(out, className, fields) {
     out.println "package ${packageName}.model;"
     out.println ""
     out.println "import io.swagger.annotations.ApiModel;"
@@ -72,11 +79,13 @@ def calcFields(table) {
         def spec = Case.LOWER.apply(col.getDataType().getSpecification())
         def typeStr = typeMapping.find { p, t -> p.matcher(spec).find() }.value
         fields += [[
-                           name   : javaName(col.getName(), false),
-                           dataType : col.getDataType(),
-                           type   : typeStr,
-                           comment: col.getComment(),
-                           annos  : ""]]
+                           left    : javaName(col.getName(), false),
+                           right   : col.getName(),
+                           name    : javaName(col.getName(), false),
+                           dataType: col.getDataType(),
+                           type    : typeStr,
+                           comment : col.getComment(),
+                           annos   : ""]]
     }
 }
 

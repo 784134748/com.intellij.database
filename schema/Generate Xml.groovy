@@ -10,7 +10,7 @@ import com.intellij.database.util.DasUtil
  *   FILES       files helper
  */
 
-packageName = "com.yalonglee.learning.security"
+packageName = ""
 typeMapping = [
         (~/(?i)bigint/)                   : "Long",
         (~/(?i)int/)                      : "Integer",
@@ -26,17 +26,30 @@ FILES.chooseDirectoryAndSave("Choose directory", "Choose where to store generate
 }
 
 def generate(table, dir) {
-    def tableName = table.getName()
+    int index = dir.toString().lastIndexOf("/src/main/java/")
+    if (index != -1) {
+        packageName = dir.toString().substring(index + 15).replaceAll("/", ".")
+    }
     def className = javaName(table.getName(), true)
     def fields = calcFields(table)
-    new File(dir, className + "Mapper.xml").withPrintWriter { out -> generate(out, tableName, className, fields) }
+    def tableName = table.getName()
+    def xmlDir = dir.toString().substring(0, index + 10) + "/resources/mapper/"
+    def baseXmlDir = dir.toString().substring(0, index + 10) + "/resources/mapper/base/"
+    def baseXmlFile = new File(baseXmlDir)
+    baseXmlFile.mkdir()
+    new File(baseXmlDir, className + "BaseMapper.xml").withPrintWriter { out -> baseXml(out, tableName, className, fields) }
+    def xmlFile = new File(xmlDir, className + "Mapper.xml")
+    if (!xmlFile.exists()) {
+        xmlFile.withPrintWriter { out -> xml(out, tableName, className, fields) }
+    }
 }
 
-def generate(out, tableName, className, fields) {
+def baseXml(out, tableName, className, fields) {
     int index = 0
     out.println "<?xml version='1.0' encoding='UTF-8' ?>"
     out.println "<!DOCTYPE mapper PUBLIC '-//mybatis.org//DTD Mapper 3.0//EN' 'http://mybatis.org/dtd/mybatis-3-mapper.dtd' >"
-    out.println "<mapper namespace='${packageName}.mapper.${className}Mapper'>"
+    out.println "<mapper namespace='${packageName}.mapper.base.${className}BaseMapper'>"
+    out.println ""
     out.println "    <sql id='Base_Column_List' >"
     out.print "    "
     fields.each() {
@@ -48,16 +61,17 @@ def generate(out, tableName, className, fields) {
     }
     out.println ""
     out.println "    </sql>"
+    out.println ""
     out.println "    <select id='selectByPrimaryKey' resultType='${packageName}.model.${className}' parameterType='java.lang.Long'>"
     out.println "        select "
-    out.println "        <include refid= 'Base_Column_List' />"
+    out.println "        <include refid='Base_Column_List' />"
     out.println "        from ${tableName} "
     out.println "        where id = #{id}"
     out.println "    </select>"
     out.println ""
     out.println "    <select id='selectByQuery' resultType='${packageName}.model.${className}' parameterType='java.util.Map'>"
     out.println "        select "
-    out.println "        <include refid= 'Base_Column_List' />"
+    out.println "        <include refid='Base_Column_List' />"
     out.println "        from ${tableName} "
     out.println "        <where>"
     out.println "            <include refid='query_filter'/>"
@@ -82,12 +96,12 @@ def generate(out, tableName, className, fields) {
     out.println "        insert into ${tableName}"
     out.println "        <trim prefix='(' suffix=')' suffixOverrides=','>"
     fields.each() {
-        out.println "                <if test='${it.left} != null'>${it.right},</if>"
+        out.println "            <if test='${it.left} != null'>${it.right},</if>"
     }
     out.println "        </trim>"
     out.println "        <trim prefix='values (' suffix=')' suffixOverrides=','>"
     fields.each() {
-        out.println "                <if test='${it.left} != null'>#{${it.left}},</if>"
+        out.println "            <if test='${it.left} != null'>#{${it.left}},</if>"
     }
     out.println "        </trim>"
     out.println "    </insert>"
@@ -96,7 +110,7 @@ def generate(out, tableName, className, fields) {
     out.println "        update ${tableName}"
     out.println "        <set>"
     fields.each() {
-        out.println "                <if test='${it.left} != null'>${it.right} = #{${it.left}},</if>"
+        out.println "            <if test='${it.left} != null'>${it.right} = #{${it.left}},</if>"
     }
     out.println "        </set>"
     out.println "        where id = #{id}"
@@ -104,7 +118,7 @@ def generate(out, tableName, className, fields) {
     out.println ""
     out.println "    <sql id='query_filter'>"
     fields.each() {
-        out.println "            <if test='${it.left} != null'>and ${it.right} = #{${it.left}}</if>"
+        out.println "        <if test='${it.left} != null'>and ${it.right} = #{${it.left}}</if>"
     }
     out.println "    </sql>"
     out.println ""
@@ -112,17 +126,26 @@ def generate(out, tableName, className, fields) {
     out.println "</mapper>"
 }
 
+def xml(out, tableName, className, fields) {
+    out.println "<?xml version='1.0' encoding='UTF-8' ?>"
+    out.println "<!DOCTYPE mapper PUBLIC '-//mybatis.org//DTD Mapper 3.0//EN' 'http://mybatis.org/dtd/mybatis-3-mapper.dtd' >"
+    out.println "<mapper namespace='${packageName}.mapper.${className}Mapper'>"
+    out.println ""
+    out.println "</mapper>"
+}
 
 def calcFields(table) {
     DasUtil.getColumns(table).reduce([]) { fields, col ->
         def spec = Case.LOWER.apply(col.getDataType().getSpecification())
         def typeStr = typeMapping.find { p, t -> p.matcher(spec).find() }.value
         fields += [[
-                           left   : javaName(col.getName(), false),
-                           right  : col.getName(),
-                           type   : typeStr,
-                           comment: col.getComment(),
-                           annos  : ""]]
+                           left    : javaName(col.getName(), false),
+                           right   : col.getName(),
+                           name    : javaName(col.getName(), false),
+                           dataType: col.getDataType(),
+                           type    : typeStr,
+                           comment : col.getComment(),
+                           annos   : ""]]
     }
 }
 

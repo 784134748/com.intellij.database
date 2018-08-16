@@ -10,7 +10,7 @@ import com.intellij.database.util.DasUtil
  *   FILES       files helper
  */
 
-packageName = "com.yalonglee.learning.security"
+packageName = ""
 typeMapping = [
         (~/(?i)bigint/)                   : "Long",
         (~/(?i)int/)                      : "Integer",
@@ -26,24 +26,208 @@ FILES.chooseDirectoryAndSave("Choose directory", "Choose where to store generate
 }
 
 def generate(table, dir) {
-    def tableName = table.getName()
+    int index = dir.toString().lastIndexOf("/src/main/java/")
+    if (index != -1) {
+        packageName = dir.toString().substring(index + 15).replaceAll("/", ".")
+    }
     def className = javaName(table.getName(), true)
     def fields = calcFields(table)
-    new File(dir, className + ".java").withPrintWriter { out -> generate(out, className, tableName, fields) }
+    def tableName = table.getName()
+
+
+
+    def modelDir = dir.toString() + "/model/"
+    def modelFile = new File(modelDir)
+    modelFile.mkdir()
+    new File(modelDir, className + ".java").withPrintWriter { out -> model(out, className, fields) }
+
+
+
+    def mapperDir = dir.toString() + "/mapper/"
+    def baseMapperDir = dir.toString() + "/mapper/base/"
+    def baseMapperFile = new File(baseMapperDir)
+    baseMapperFile.mkdir()
+    new File(baseMapperDir, className + "BaseMapper.java").withPrintWriter { out -> baseMapper(out, className, fields) }
+    def mapperFile = new File(mapperDir, className + "Mapper.java")
+    if (!mapperFile.exists()) {
+        mapperFile.withPrintWriter { out -> mapper(out, className, fields) }
+    }
+
+
+
+    def xmlDir = dir.toString().substring(0, index + 10) + "/resources/mapper/"
+    def baseXmlDir = dir.toString().substring(0, index + 10) + "/resources/mapper/base/"
+    def baseXmlFile = new File(baseXmlDir)
+    baseXmlFile.mkdir()
+    new File(baseXmlDir, className + "BaseMapper.xml").withPrintWriter { out -> baseXml(out, tableName, className, fields) }
+    def xmlFile = new File(xmlDir, className + "Mapper.xml")
+    if (!xmlFile.exists()) {
+        xmlFile.withPrintWriter { out -> xml(out, tableName, className, fields) }
+    }
 }
 
-def generate(out, className, tableName, fields) {
-    out.println "package $packageName"
+def model(out, className, fields) {
+    out.println "package ${packageName}.model;"
     out.println ""
+    out.println "import io.swagger.annotations.ApiModel;"
+    out.println "import io.swagger.annotations.ApiModelProperty;"
+    out.println "import lombok.*;"
     out.println ""
+    out.println "import java.io.Serializable;"
+    out.println "import java.time.*;"
+    out.println ""
+    out.println "@Data"
+    out.println "@Builder"
+    out.println "@NoArgsConstructor"
+    out.println "@AllArgsConstructor"
+    out.println "@ApiModel(value = \"$className\")"
     out.println "public class $className implements Serializable {"
     out.println ""
-    out.println "tableName: ${tableName}"
+    out.println "  public static final long serialVersionUID = 1L;"
     out.println ""
     fields.each() {
-        out.println "default: ${it.default}"
+        if (it.commoent != "") {
+            out.println " /**"
+            out.println "  * ${it.comment}【${it.dataType}】"
+            out.println "  */"
+        }
+        if (it.commoent != "") {
+            out.println "  @ApiModelProperty(value = \"${it.comment}\", dataType = \"${it.dataType}\")"
+        }
+        if (it.annos != "") out.println "  ${it.annos}"
+        out.println "  private ${it.type} ${it.name};"
+        out.println ""
     }
+    out.println ""
     out.println "}"
+}
+
+def baseMapper(out, className, fields) {
+    out.println "package ${packageName}.mapper.base;"
+    out.println ""
+    out.println "import ${packageName}.model.${className};"
+    out.println "import org.apache.ibatis.annotations.Param;"
+    out.println ""
+    out.println "import java.util.List;"
+    out.println "import java.util.Map;"
+    out.println ""
+    out.println "public interface ${className}BaseMapper {"
+    out.println ""
+    out.println "    ${className} selectByPrimaryKey(@Param(\"id\") Long id);"
+    out.println ""
+    out.println "    List<${className}> selectByQuery(Map<String, Object> param);"
+    out.println ""
+    out.println "    void deleteByPrimaryKey(@Param(\"id\") Long id);"
+    out.println ""
+    out.println "    Integer count(Map<String, Object> param);"
+    out.println ""
+    out.println "    Long insert(Map<String, Object> param);"
+    out.println ""
+    out.println "    void update(Map<String, Object> param);"
+    out.println ""
+    out.println "}"
+}
+
+def mapper(out, className, fields) {
+    out.println "package ${packageName}.mapper;"
+    out.println ""
+    out.println "import ${packageName}.mapper.base.${className}BaseMapper;"
+    out.println "import org.apache.ibatis.annotations.Mapper;"
+    out.println ""
+    out.println "@Mapper"
+    out.println "public interface ${className}Mapper extends ${className}BaseMapper {"
+    out.println ""
+    out.println "}"
+}
+
+def baseXml(out, tableName, className, fields) {
+    int index = 0
+    out.println "<?xml version='1.0' encoding='UTF-8' ?>"
+    out.println "<!DOCTYPE mapper PUBLIC '-//mybatis.org//DTD Mapper 3.0//EN' 'http://mybatis.org/dtd/mybatis-3-mapper.dtd' >"
+    out.println "<mapper namespace='${packageName}.mapper.base.${className}BaseMapper'>"
+    out.println ""
+    out.println "    <sql id='Base_Column_List' >"
+    out.print "    "
+    fields.each() {
+        if (index != 0) {
+            out.print ", "
+        }
+        out.print "${it.right}"
+        index++
+    }
+    out.println ""
+    out.println "    </sql>"
+    out.println ""
+    out.println "    <select id='selectByPrimaryKey' resultType='${packageName}.model.${className}' parameterType='java.lang.Long'>"
+    out.println "        select "
+    out.println "        <include refid='Base_Column_List' />"
+    out.println "        from ${tableName} "
+    out.println "        where id = #{id}"
+    out.println "    </select>"
+    out.println ""
+    out.println "    <select id='selectByQuery' resultType='${packageName}.model.${className}' parameterType='java.util.Map'>"
+    out.println "        select "
+    out.println "        <include refid='Base_Column_List' />"
+    out.println "        from ${tableName} "
+    out.println "        <where>"
+    out.println "            <include refid='query_filter'/>"
+    out.println "        </where>"
+    out.println "        <if test='start != null'>"
+    out.println "            LIMIT #{start},#{limit}"
+    out.println "        </if>"
+    out.println "    </select>"
+    out.println ""
+    out.println "    <delete id='deleteByPrimaryKey' parameterType='java.lang.Long'>"
+    out.println "        delete from ${tableName} where id = #{id}"
+    out.println "    </delete>"
+    out.println ""
+    out.println "    <select id='count' resultType='java.lang.Integer' parameterType='java.util.Map'>"
+    out.println "        select count(*) from ${tableName}"
+    out.println "        <where>"
+    out.println "            <include refid='query_filter'/>"
+    out.println "        </where>"
+    out.println "    </select>"
+    out.println ""
+    out.println "    <insert id='insert' parameterType='java.util.Map' useGeneratedKeys='true' keyProperty='id'>"
+    out.println "        insert into ${tableName}"
+    out.println "        <trim prefix='(' suffix=')' suffixOverrides=','>"
+    fields.each() {
+        out.println "            <if test='${it.left} != null'>${it.right},</if>"
+    }
+    out.println "        </trim>"
+    out.println "        <trim prefix='values (' suffix=')' suffixOverrides=','>"
+    fields.each() {
+        out.println "            <if test='${it.left} != null'>#{${it.left}},</if>"
+    }
+    out.println "        </trim>"
+    out.println "    </insert>"
+    out.println ""
+    out.println "    <update id='update' parameterType='java.util.Map'>"
+    out.println "        update ${tableName}"
+    out.println "        <set>"
+    fields.each() {
+        out.println "            <if test='${it.left} != null'>${it.right} = #{${it.left}},</if>"
+    }
+    out.println "        </set>"
+    out.println "        where id = #{id}"
+    out.println "    </update>"
+    out.println ""
+    out.println "    <sql id='query_filter'>"
+    fields.each() {
+        out.println "        <if test='${it.left} != null'>and ${it.right} = #{${it.left}}</if>"
+    }
+    out.println "    </sql>"
+    out.println ""
+    out.println ""
+    out.println "</mapper>"
+}
+
+def xml(out, tableName, className, fields) {
+    out.println "<?xml version='1.0' encoding='UTF-8' ?>"
+    out.println "<!DOCTYPE mapper PUBLIC '-//mybatis.org//DTD Mapper 3.0//EN' 'http://mybatis.org/dtd/mybatis-3-mapper.dtd' >"
+    out.println "<mapper namespace='${packageName}.mapper.${className}Mapper'>"
+    out.println ""
+    out.println "</mapper>"
 }
 
 def calcFields(table) {
@@ -51,11 +235,13 @@ def calcFields(table) {
         def spec = Case.LOWER.apply(col.getDataType().getSpecification())
         def typeStr = typeMapping.find { p, t -> p.matcher(spec).find() }.value
         fields += [[
-                           name   : javaName(col.getName(), false),
-                           type   : typeStr,
-                           comment: col.getComment(),
-                           default: col.getDefault(),
-                           annos  : ""]]
+                           left    : javaName(col.getName(), false),
+                           right   : col.getName(),
+                           name    : javaName(col.getName(), false),
+                           dataType: col.getDataType(),
+                           type    : typeStr,
+                           comment : col.getComment(),
+                           annos   : ""]]
     }
 }
 
@@ -66,3 +252,4 @@ def javaName(str, capitalize) {
             .replaceAll(/[^\p{javaJavaIdentifierPart}[_]]/, "_")
     capitalize || s.length() == 1 ? s : Case.LOWER.apply(s[0]) + s[1..-1]
 }
+
