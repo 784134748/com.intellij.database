@@ -110,7 +110,7 @@ def baseXml(out, tableName, className, fields) {
     out.println "        update ${tableName}"
     out.println "        <set>"
     fields.each() {
-        out.println "            <if test='${it.left} != null'>${it.right} = #{${it.left}},</if>"
+        out.println "            <if test='${it.left}'>${it.right} = #{${it.left}},</if>"
     }
     out.println "        </set>"
     out.println "        where id = #{id}"
@@ -121,7 +121,6 @@ def baseXml(out, tableName, className, fields) {
         out.println "        <if test='${it.left} != null'>and ${it.right} = #{${it.left}}</if>"
     }
     out.println "    </sql>"
-    out.println ""
     out.println ""
     out.println "</mapper>"
 }
