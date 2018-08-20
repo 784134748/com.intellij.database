@@ -11,6 +11,7 @@ import com.intellij.database.util.DasUtil
  */
 
 packageName = ""
+commonProperties = ["id", "gmt_create", "gmt_modified"] as String[]
 typeMapping = [
         (~/(?i)bigint/)                   : "Long",
         (~/(?i)int/)                      : "Integer",
@@ -58,20 +59,54 @@ def model(out, className, fields) {
     out.println "  public static final long serialVersionUID = 1L;"
     out.println ""
     fields.each() {
-        if (it.commoent != "") {
-            out.println " /**"
-            out.println "  * ${it.comment}【${it.dataType}】"
-            out.println "  */"
+        if (propertiesContainField(it.right, commonProperties)) {
+            if (it.commoent != "") {
+                out.println " /**"
+                out.println "  * ${it.comment}【${it.dataType}】"
+                out.println "  */"
+            }
+            if (it.commoent != "") {
+                out.println "  @ApiModelProperty(value = \"${it.comment}\", dataType = \"${it.dataType}\", hidden = true)"
+            }
+            if (it.annos != "") out.println "  ${it.annos}"
+            out.println "  private ${it.type} ${it.name};"
+            out.println ""
+        } else {
+            if (it.commoent != "") {
+                out.println " /**"
+                out.println "  * ${it.comment}【${it.dataType}】"
+                out.println "  */"
+            }
+            if (it.commoent != "") {
+                out.println "  @ApiModelProperty(value = \"${it.comment}\", dataType = \"${it.dataType}\")"
+            }
+            if (it.annos != "") out.println "  ${it.annos}"
+            out.println "  private ${it.type} ${it.name};"
+            out.println ""
         }
-        if (it.commoent != "") {
-            out.println "  @ApiModelProperty(value = \"${it.comment}\", dataType = \"${it.dataType}\")"
-        }
-        if (it.annos != "") out.println "  ${it.annos}"
-        out.println "  private ${it.type} ${it.name};"
-        out.println ""
     }
     out.println ""
     out.println "}"
+}
+
+boolean fieldsContainPropertie(propertie, fields) {
+    def isExsit = false
+    fields.each() {
+        if (propertie == it.right) {
+            isExsit = true
+        }
+    }
+    isExsit
+}
+
+boolean propertiesContainField(field, properties) {
+    def isExsit = false
+    properties.each() {
+        if (field == it) {
+            isExsit = true
+        }
+    }
+    isExsit
 }
 
 def calcFields(table) {

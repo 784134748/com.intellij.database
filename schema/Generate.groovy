@@ -1,8 +1,8 @@
-
 import com.intellij.database.model.DasTable
 import com.intellij.database.model.ObjectKind
 import com.intellij.database.util.Case
 import com.intellij.database.util.DasUtil
+import org.apache.commons.lang3.StringUtils
 
 /*
  * Available context bindings:
@@ -12,6 +12,10 @@ import com.intellij.database.util.DasUtil
  */
 
 packageName = ""
+gmtCreate = ["gmt_create"] as String[]
+gmtModified = ["gmt_modified"] as String[]
+isDeleteProperties = "is_delete"
+commonProperties = ["id", "gmt_create", "gmt_modified"] as String[]
 typeMapping = [
         (~/(?i)bigint/)                   : "Long",
         (~/(?i)int/)                      : "Integer",
@@ -87,17 +91,31 @@ def model(out, className, fields) {
     out.println "  public static final long serialVersionUID = 1L;"
     out.println ""
     fields.each() {
-        if (it.commoent != "") {
-            out.println " /**"
-            out.println "  * ${it.comment}【${it.dataType}】"
-            out.println "  */"
+        if (propertiesContainField(it.right, commonProperties)) {
+            if (it.commoent != "") {
+                out.println " /**"
+                out.println "  * ${it.comment}【${it.dataType}】"
+                out.println "  */"
+            }
+            if (it.commoent != "") {
+                out.println "  @ApiModelProperty(value = \"${it.comment}\", dataType = \"${it.dataType}\", hidden = true)"
+            }
+            if (it.annos != "") out.println "  ${it.annos}"
+            out.println "  private ${it.type} ${it.name};"
+            out.println ""
+        } else {
+            if (it.commoent != "") {
+                out.println " /**"
+                out.println "  * ${it.comment}【${it.dataType}】"
+                out.println "  */"
+            }
+            if (it.commoent != "") {
+                out.println "  @ApiModelProperty(value = \"${it.comment}\", dataType = \"${it.dataType}\")"
+            }
+            if (it.annos != "") out.println "  ${it.annos}"
+            out.println "  private ${it.type} ${it.name};"
+            out.println ""
         }
-        if (it.commoent != "") {
-            out.println "  @ApiModelProperty(value = \"${it.comment}\", dataType = \"${it.dataType}\")"
-        }
-        if (it.annos != "") out.println "  ${it.annos}"
-        out.println "  private ${it.type} ${it.name};"
-        out.println ""
     }
     out.println ""
     out.println "}"
@@ -178,10 +196,17 @@ def baseXml(out, tableName, className, fields) {
     out.println "        </if>"
     out.println "    </select>"
     out.println ""
-    out.println "    <delete id='deleteByPrimaryKey' parameterType='java.lang.Long'>"
-    out.println "        delete from ${tableName} where id = #{id}"
-    out.println "    </delete>"
-    out.println ""
+    if (propertiesContainField(isDeleteProperties, fields)) {
+        out.println "    <delete id='deleteByPrimaryKey' parameterType='java.lang.Long'>"
+        out.println "        delete from ${tableName} where id = #{id}"
+        out.println "    </delete>"
+        out.println ""
+    } else {
+        out.println "    <delete id='deleteByPrimaryKey' parameterType='java.lang.Long'>"
+        out.println "        update ${tableName} set ${isDeleteProperties} = 1 where id = #{id}"
+        out.println "    </delete>"
+        out.println ""
+    }
     out.println "    <select id='count' resultType='java.lang.Integer' parameterType='java.util.Map'>"
     out.println "        select count(*) from ${tableName}"
     out.println "        <where>"
@@ -193,12 +218,24 @@ def baseXml(out, tableName, className, fields) {
     out.println "        insert into ${tableName}"
     out.println "        <trim prefix='(' suffix=')' suffixOverrides=','>"
     fields.each() {
-        out.println "            <if test='${it.left} != null'>${it.right},</if>"
+        if (propertiesContainField(it.right, gmtCreate)) {
+            out.println "            ${it.right},"
+        } else if (propertiesContainField(it.right, gmtModified)) {
+            out.println "            ${it.right},"
+        } else {
+            out.println "            <if test='${it.left} != null'>${it.right},</if>"
+        }
     }
     out.println "        </trim>"
     out.println "        <trim prefix='values (' suffix=')' suffixOverrides=','>"
     fields.each() {
-        out.println "            <if test='${it.left} != null'>#{${it.left}},</if>"
+        if (propertiesContainField(it.right, gmtCreate)) {
+            out.println "            now(),"
+        } else if (propertiesContainField(it.right, gmtModified)) {
+            out.println "            now(),"
+        } else {
+            out.println "            <if test='${it.left} != null'>#{${it.left}},</if>"
+        }
     }
     out.println "        </trim>"
     out.println "    </insert>"
@@ -207,7 +244,11 @@ def baseXml(out, tableName, className, fields) {
     out.println "        update ${tableName}"
     out.println "        <set>"
     fields.each() {
-        out.println "            <if test='${it.left} != null'>${it.right} = #{${it.left}},</if>"
+        if (propertiesContainField(it.right, gmtModified)) {
+            out.println "            <if test='${it.left}'>${it.right} = now(),</if>"
+        } else {
+            out.println "            <if test='${it.left}'>${it.right} = #{${it.left}},</if>"
+        }
     }
     out.println "        </set>"
     out.println "        where id = #{id}"
@@ -215,10 +256,13 @@ def baseXml(out, tableName, className, fields) {
     out.println ""
     out.println "    <sql id='query_filter'>"
     fields.each() {
-        out.println "        <if test='${it.left} != null'>and ${it.right} = #{${it.left}}</if>"
+        if (propertiesContainField(it.right, isDeleteProperties)) {
+            out.println "        and ${it.right} != 1"
+        } else {
+            out.println "        <if test='${it.left} != null'>and ${it.right} = #{${it.left}}</if>"
+        }
     }
     out.println "    </sql>"
-    out.println ""
     out.println ""
     out.println "</mapper>"
 }
@@ -229,6 +273,26 @@ def xml(out, tableName, className, fields) {
     out.println "<mapper namespace='${packageName}.mapper.${className}Mapper'>"
     out.println ""
     out.println "</mapper>"
+}
+
+boolean fieldsContainPropertie(propertie, fields) {
+    def isExsit = false
+    fields.each() {
+        if (propertie == it.right) {
+            isExsit = true
+        }
+    }
+    isExsit
+}
+
+boolean propertiesContainField(field, properties) {
+    def isExsit = false
+    properties.each() {
+        if (field == it) {
+            isExsit = true
+        }
+    }
+    isExsit
 }
 
 def calcFields(table) {

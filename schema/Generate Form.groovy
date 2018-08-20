@@ -10,8 +10,8 @@ import com.intellij.database.util.DasUtil
  *   FILES       files helper
  */
 
-commonProperties = ["id",] as String[]
 packageName = ""
+commonProperties = ["id",] as String[]
 typeMapping = [
         (~/(?i)bigint/)                   : "Long",
         (~/(?i)int/)                      : "Integer",
