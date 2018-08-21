@@ -35,7 +35,7 @@ def generate(table, dir) {
     def fields = calcFields(table)
     def formDir = dir.toString() + "/vo/form/"
     def formFile = new File(formDir)
-    formFile.mkdir()
+    formFile.mkdirs()
     new File(formDir, className + "Form.java").withPrintWriter { out -> model(out, className, fields) }
 }
 

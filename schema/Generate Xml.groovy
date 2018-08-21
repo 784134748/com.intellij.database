@@ -40,7 +40,7 @@ def generate(table, dir) {
     def xmlDir = dir.toString().substring(0, index + 10) + "/resources/mapper/"
     def baseXmlDir = dir.toString().substring(0, index + 10) + "/resources/mapper/base/"
     def baseXmlFile = new File(baseXmlDir)
-    baseXmlFile.mkdir()
+    baseXmlFile.mkdirs()
     new File(baseXmlDir, className + "BaseMapper.xml").withPrintWriter { out -> baseXml(out, tableName, className, fields) }
     def xmlFile = new File(xmlDir, className + "Mapper.xml")
     if (!xmlFile.exists()) {

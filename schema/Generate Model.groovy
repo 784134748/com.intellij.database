@@ -35,7 +35,7 @@ def generate(table, dir) {
     def fields = calcFields(table)
     def modelDir = dir.toString() + "/model/"
     def modelFile = new File(modelDir)
-    modelFile.mkdir()
+    modelFile.mkdirs()
     new File(modelDir, className + ".java").withPrintWriter { out -> model(out, className, fields) }
 }
 

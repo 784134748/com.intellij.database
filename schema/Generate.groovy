@@ -43,7 +43,7 @@ def generate(table, dir) {
 
     def modelDir = dir.toString() + "/model/"
     def modelFile = new File(modelDir)
-    modelFile.mkdir()
+    modelFile.mkdirs()
     new File(modelDir, className + ".java").withPrintWriter { out -> model(out, className, fields) }
 
 
@@ -51,7 +51,7 @@ def generate(table, dir) {
     def mapperDir = dir.toString() + "/mapper/"
     def baseMapperDir = dir.toString() + "/mapper/base/"
     def baseMapperFile = new File(baseMapperDir)
-    baseMapperFile.mkdir()
+    baseMapperFile.mkdirs()
     new File(baseMapperDir, className + "BaseMapper.java").withPrintWriter { out -> baseMapper(out, className, fields) }
     def mapperFile = new File(mapperDir, className + "Mapper.java")
     if (!mapperFile.exists()) {
@@ -63,7 +63,7 @@ def generate(table, dir) {
     def xmlDir = dir.toString().substring(0, index + 10) + "/resources/mapper/"
     def baseXmlDir = dir.toString().substring(0, index + 10) + "/resources/mapper/base/"
     def baseXmlFile = new File(baseXmlDir)
-    baseXmlFile.mkdir()
+    baseXmlFile.mkdirs()
     new File(baseXmlDir, className + "BaseMapper.xml").withPrintWriter { out -> baseXml(out, tableName, className, fields) }
     def xmlFile = new File(xmlDir, className + "Mapper.xml")
     if (!xmlFile.exists()) {
@@ -142,7 +142,7 @@ def baseMapper(out, className, fields) {
     out.println ""
     out.println "    Long insert(Map<String, Object> param);"
     out.println ""
-    out.println "    void update(Map<String, Object> param);"
+    out.println "    Integer update(Map<String, Object> param);"
     out.println ""
     out.println "}"
 }

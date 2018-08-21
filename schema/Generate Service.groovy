@@ -41,7 +41,7 @@ def generate(table, dir) {
     def serviceDir = dir.toString() + "/service/"
     def serviceImplDir = dir.toString() + "/service/impl/"
     def serviceImplFile = new File(serviceImplDir)
-    serviceImplFile.mkdir()
+    serviceImplFile.mkdirs()
     new File(serviceImplDir, className + "ServiceImpl.java").withPrintWriter { out -> serviceImpl(out, className, paramName, fields) }
     new File(serviceDir, className + "Service.java").withPrintWriter { out -> service(out, className, paramName, fields) }
 }

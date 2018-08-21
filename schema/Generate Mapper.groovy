@@ -35,7 +35,7 @@ def generate(table, dir) {
     def mapperDir = dir.toString() + "/mapper/"
     def baseMapperDir = dir.toString() + "/mapper/base/"
     def baseMapperFile = new File(baseMapperDir)
-    baseMapperFile.mkdir()
+    baseMapperFile.mkdirs()
     new File(baseMapperDir, className + "BaseMapper.java").withPrintWriter { out -> baseMapper(out, className, fields) }
     def mapperFile = new File(mapperDir, className + "Mapper.java")
     if (!mapperFile.exists()) {
