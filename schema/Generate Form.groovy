@@ -11,7 +11,7 @@ import com.intellij.database.util.DasUtil
  */
 
 packageName = ""
-commonProperties = ["id",] as String[]
+commonProperties = ["id", "gmt_create", "gmt_modified", "is_delete", "operater"] as String[]
 typeMapping = [
         (~/(?i)bigint/)                   : "Long",
         (~/(?i)int/)                      : "Integer",
@@ -59,14 +59,7 @@ def model(out, className, fields) {
     out.println "  public static final long serialVersionUID = 1L;"
     out.println ""
     fields.each() {
-        def properties = it.name
-        def exist = false
-        commonProperties.each() {
-            if (it == properties) {
-                exist = true
-            }
-        }
-        if (!exist) {
+        if (!propertiesContainField(it.right, commonProperties)) {
             if (it.commoent != "") {
                 out.println " /**"
                 out.println "  * ${it.comment}【${it.dataType}】"
@@ -82,6 +75,26 @@ def model(out, className, fields) {
     }
     out.println ""
     out.println "}"
+}
+
+boolean fieldsContainPropertie(propertie, fields) {
+    def isExsit = false
+    fields.each() {
+        if (propertie == it.right) {
+            isExsit = true
+        }
+    }
+    isExsit
+}
+
+boolean propertiesContainField(field, properties) {
+    def isExsit = false
+    properties.each() {
+        if (field == it) {
+            isExsit = true
+        }
+    }
+    isExsit
 }
 
 def calcFields(table) {

@@ -11,6 +11,7 @@ import com.intellij.database.util.DasUtil
  */
 
 packageName = ""
+basePackageName = ""
 typeMapping = [
         (~/(?i)bigint/)                   : "Long",
         (~/(?i)int/)                      : "Integer",
@@ -30,6 +31,10 @@ def generate(table, dir) {
     if (index != -1) {
         packageName = dir.toString().substring(index + 15).replaceAll("/", ".")
     }
+    index = packageName.lastIndexOf(".")
+    if (index != -1) {
+        basePackageName = packageName.toString().substring(0, index)
+    }
     def className = javaName(table.getName(), true)
     def paramName = javaName(table.getName(), false)
     def fields = calcFields(table)
@@ -44,7 +49,7 @@ def generate(table, dir) {
 def serviceImpl(out, className, paramName, fields) {
     out.println "package ${packageName}.service.impl;"
     out.println ""
-    out.println "import com.yalonglee.learning.core.common.Result;"
+    out.println "import ${basePackageName}.core.common.Result;"
     out.println "import ${packageName}.mapper.${className}Mapper;"
     out.println "import ${packageName}.model.${className};"
     out.println "import ${packageName}.vo.form.${className}Form;"

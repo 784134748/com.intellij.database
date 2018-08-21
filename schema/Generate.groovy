@@ -136,7 +136,7 @@ def baseMapper(out, className, fields) {
     out.println ""
     out.println "    List<${className}> selectByQuery(Map<String, Object> param);"
     out.println ""
-    out.println "    void deleteByPrimaryKey(@Param(\"id\") Long id);"
+    out.println "    Integer deleteByPrimaryKey(@Param(\"id\") Long id);"
     out.println ""
     out.println "    Integer count(Map<String, Object> param);"
     out.println ""

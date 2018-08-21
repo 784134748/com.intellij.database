@@ -11,7 +11,7 @@ import com.intellij.database.util.DasUtil
  */
 
 packageName = ""
-commonProperties = ["id", "gmt_create", "gmt_modified"] as String[]
+commonProperties = ["id", "gmt_create", "gmt_modified", "is_delete", "operater"] as String[]
 typeMapping = [
         (~/(?i)bigint/)                   : "Long",
         (~/(?i)int/)                      : "Integer",
