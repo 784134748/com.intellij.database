@@ -32,14 +32,15 @@ def generate(table, dir) {
         packageName = dir.toString().substring(index + 15).replaceAll("/", ".")
     }
     def className = javaName(table.getName(), true)
+    def tableComment = table.getComment()
     def fields = calcFields(table)
     def formDir = dir.toString() + "/vo/form/"
     def formFile = new File(formDir)
     formFile.mkdirs()
-    new File(formDir, className + "Form.java").withPrintWriter { out -> model(out, className, fields) }
+    new File(formDir, className + "Form.java").withPrintWriter { out -> model(out, className, tableComment, fields) }
 }
 
-def model(out, className, fields) {
+def model(out, className, tableComment, fields) {
     out.println "package ${packageName}.vo.form;"
     out.println ""
     out.println "import io.swagger.annotations.ApiModel;"
@@ -53,7 +54,7 @@ def model(out, className, fields) {
     out.println "@Builder"
     out.println "@NoArgsConstructor"
     out.println "@AllArgsConstructor"
-    out.println "@ApiModel(value = \"${className}Form\")"
+    out.println "@ApiModel(value = \"${className}Form\", description = \"${tableComment}\")"
     out.println "public class ${className}Form implements Serializable {"
     out.println ""
     out.println "  public static final long serialVersionUID = 1L;"
