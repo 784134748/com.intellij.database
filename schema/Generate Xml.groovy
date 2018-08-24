@@ -14,7 +14,7 @@ import org.apache.commons.lang3.StringUtils
 packageName = ""
 gmtCreate = ["gmt_create"] as String[]
 gmtModified = ["gmt_modified"] as String[]
-isDeleteProperties = "is_delete"
+isDeleteProperties = ["is_delete"] as String[]
 typeMapping = [
         (~/(?i)bigint/)                   : "Long",
         (~/(?i)int/)                      : "Integer",
@@ -92,7 +92,7 @@ def baseXml(out, tableName, className, fields) {
         out.println ""
     } else {
         out.println "    <delete id='deleteByPrimaryKey' parameterType='java.lang.Long'>"
-        out.println "        update ${tableName} set ${isDeleteProperties} = 1 where id = #{id}"
+        out.println "        update ${tableName} set ${isDeleteProperties[0]} = 1 where id = #{id}"
         out.println "    </delete>"
         out.println ""
     }
@@ -111,6 +111,8 @@ def baseXml(out, tableName, className, fields) {
             out.println "            ${it.right},"
         } else if (propertiesContainField(it.right, gmtModified)) {
             out.println "            ${it.right},"
+        } else if (propertiesContainField(it.right, isDeleteProperties)){
+            out.println "            ${it.right},"
         } else {
             out.println "            <if test='${it.left} != null'>${it.right},</if>"
         }
@@ -122,6 +124,8 @@ def baseXml(out, tableName, className, fields) {
             out.println "            now(),"
         } else if (propertiesContainField(it.right, gmtModified)) {
             out.println "            now(),"
+        } else if (propertiesContainField(it.right, isDeleteProperties)){
+            out.println "            0,"
         } else {
             out.println "            <if test='${it.left} != null'>#{${it.left}},</if>"
         }

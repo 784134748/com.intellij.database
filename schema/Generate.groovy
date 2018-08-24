@@ -4,6 +4,10 @@ import com.intellij.database.util.Case
 import com.intellij.database.util.DasUtil
 import org.apache.commons.lang3.StringUtils
 
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
+
 /*
  * Available context bindings:
  *   SELECTION   Iterable<DasObject>
@@ -14,7 +18,7 @@ import org.apache.commons.lang3.StringUtils
 packageName = ""
 gmtCreate = ["gmt_create"] as String[]
 gmtModified = ["gmt_modified"] as String[]
-isDeleteProperties = "is_delete"
+isDeleteProperties = ["is_delete"] as String[]
 commonProperties = ["id", "gmt_create", "gmt_modified"] as String[]
 typeMapping = [
         (~/(?i)bigint/)                   : "Long",
@@ -24,6 +28,27 @@ typeMapping = [
         (~/(?i)date/)                     : "java.time.LocalDate",
         (~/(?i)time/)                     : "java.time.LocalTime",
         (~/(?i)/)                         : "String"
+]
+
+
+dataTypeMapping = [
+        (~/(?i)bigint/)                   : "integer",
+        (~/(?i)int/)                      : "integer",
+        (~/(?i)float|double|decimal|real/): "number",
+        (~/(?i)datetime|timestamp/)       : "string",
+        (~/(?i)date/)                     : "string",
+        (~/(?i)time/)                     : "string",
+        (~/(?i)/)                         : "string"
+]
+
+exampleMapping = [
+        (~/(?i)bigint/)                   : "1",
+        (~/(?i)int/)                      : "1",
+        (~/(?i)float|double|decimal|real/): "1.00",
+        (~/(?i)datetime|timestamp/)       : LocalDateTime.now(),
+        (~/(?i)date/)                     : LocalDate.now(),
+        (~/(?i)time/)                     : LocalTime.now(),
+        (~/(?i)/)                         : "占位符"
 ]
 
 FILES.chooseDirectoryAndSave("Choose directory", "Choose where to store generated files") { dir ->
@@ -98,7 +123,7 @@ def model(out, className, fields) {
                 out.println "  */"
             }
             if (it.commoent != "") {
-                out.println "  @ApiModelProperty(value = \"${it.comment}\", dataType = \"${it.dataType}\", hidden = true)"
+                out.println "  @ApiModelProperty(value = \"${it.comment}\", dataType = \"${it.dataType}\", example = \"${it.example}\", hidden = true)"
             }
             if (it.annos != "") out.println "  ${it.annos}"
             out.println "  private ${it.type} ${it.name};"
@@ -110,7 +135,7 @@ def model(out, className, fields) {
                 out.println "  */"
             }
             if (it.commoent != "") {
-                out.println "  @ApiModelProperty(value = \"${it.comment}\", dataType = \"${it.dataType}\")"
+                out.println "  @ApiModelProperty(value = \"${it.comment}\", dataType = \"${it.dataType}\", example = \"${it.example}\")"
             }
             if (it.annos != "") out.println "  ${it.annos}"
             out.println "  private ${it.type} ${it.name};"
@@ -203,7 +228,7 @@ def baseXml(out, tableName, className, fields) {
         out.println ""
     } else {
         out.println "    <delete id='deleteByPrimaryKey' parameterType='java.lang.Long'>"
-        out.println "        update ${tableName} set ${isDeleteProperties} = 1 where id = #{id}"
+        out.println "        update ${tableName} set ${isDeleteProperties[0]} = 1 where id = #{id}"
         out.println "    </delete>"
         out.println ""
     }
@@ -222,6 +247,8 @@ def baseXml(out, tableName, className, fields) {
             out.println "            ${it.right},"
         } else if (propertiesContainField(it.right, gmtModified)) {
             out.println "            ${it.right},"
+        } else if (propertiesContainField(it.right, isDeleteProperties)){
+            out.println "            ${it.right},"
         } else {
             out.println "            <if test='${it.left} != null'>${it.right},</if>"
         }
@@ -233,6 +260,8 @@ def baseXml(out, tableName, className, fields) {
             out.println "            now(),"
         } else if (propertiesContainField(it.right, gmtModified)) {
             out.println "            now(),"
+        } else if (propertiesContainField(it.right, isDeleteProperties)){
+            out.println "            0,"
         } else {
             out.println "            <if test='${it.left} != null'>#{${it.left}},</if>"
         }
@@ -299,11 +328,14 @@ def calcFields(table) {
     DasUtil.getColumns(table).reduce([]) { fields, col ->
         def spec = Case.LOWER.apply(col.getDataType().getSpecification())
         def typeStr = typeMapping.find { p, t -> p.matcher(spec).find() }.value
+        def dataType = dataTypeMapping.find { p, t -> p.matcher(spec).find() }.value
+        def example = exampleMapping.find { p, t -> p.matcher(spec).find() }.value
         fields += [[
                            left    : javaName(col.getName(), false),
                            right   : col.getName(),
                            name    : javaName(col.getName(), false),
-                           dataType: col.getDataType(),
+                           dataType: dataType,
+                           example : example,
                            type    : typeStr,
                            comment : col.getComment(),
                            annos   : ""]]
