@@ -3,6 +3,10 @@ import com.intellij.database.model.ObjectKind
 import com.intellij.database.util.Case
 import com.intellij.database.util.DasUtil
 
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
+
 /*
  * Available context bindings:
  *   SELECTION   Iterable<DasObject>
@@ -20,6 +24,26 @@ typeMapping = [
         (~/(?i)date/)                     : "java.time.LocalDate",
         (~/(?i)time/)                     : "java.time.LocalTime",
         (~/(?i)/)                         : "String"
+]
+
+dataTypeMapping = [
+        (~/(?i)bigint/)                   : "integer",
+        (~/(?i)int/)                      : "integer",
+        (~/(?i)float|double|decimal|real/): "number",
+        (~/(?i)datetime|timestamp/)       : "string",
+        (~/(?i)date/)                     : "string",
+        (~/(?i)time/)                     : "string",
+        (~/(?i)/)                         : "string"
+]
+
+exampleMapping = [
+        (~/(?i)bigint/)                   : "1",
+        (~/(?i)int/)                      : "1",
+        (~/(?i)float|double|decimal|real/): "1.00",
+        (~/(?i)datetime|timestamp/)       : LocalDateTime.now(),
+        (~/(?i)date/)                     : LocalDate.now(),
+        (~/(?i)time/)                     : LocalTime.now(),
+        (~/(?i)/)                         : "占位符"
 ]
 
 FILES.chooseDirectoryAndSave("Choose directory", "Choose where to store generated files") { dir ->
@@ -66,7 +90,7 @@ def model(out, className, fields) {
                 out.println "  */"
             }
             if (it.commoent != "") {
-                out.println "  @ApiModelProperty(value = \"${it.comment}\", dataType = \"${it.dataType}\", hidden = true)"
+                out.println "  @ApiModelProperty(value = \"${it.comment}\", dataType = \"${it.dataType}\", example = \"${it.example}\", hidden = true)"
             }
             if (it.annos != "") out.println "  ${it.annos}"
             out.println "  private ${it.type} ${it.name};"
@@ -78,7 +102,7 @@ def model(out, className, fields) {
                 out.println "  */"
             }
             if (it.commoent != "") {
-                out.println "  @ApiModelProperty(value = \"${it.comment}\", dataType = \"${it.dataType}\")"
+                out.println "  @ApiModelProperty(value = \"${it.comment}\", dataType = \"${it.dataType}\", example = \"${it.example}\")"
             }
             if (it.annos != "") out.println "  ${it.annos}"
             out.println "  private ${it.type} ${it.name};"
@@ -113,11 +137,14 @@ def calcFields(table) {
     DasUtil.getColumns(table).reduce([]) { fields, col ->
         def spec = Case.LOWER.apply(col.getDataType().getSpecification())
         def typeStr = typeMapping.find { p, t -> p.matcher(spec).find() }.value
+        def dataType = dataTypeMapping.find { p, t -> p.matcher(spec).find() }.value
+        def example = exampleMapping.find { p, t -> p.matcher(spec).find() }.value
         fields += [[
                            left    : javaName(col.getName(), false),
                            right   : col.getName(),
                            name    : javaName(col.getName(), false),
-                           dataType: col.getDataType(),
+                           dataType: dataType,
+                           example : example,
                            type    : typeStr,
                            comment : col.getComment(),
                            annos   : ""]]
