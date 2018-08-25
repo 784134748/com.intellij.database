@@ -19,7 +19,7 @@ packageName = ""
 gmtCreate = ["gmt_create"] as String[]
 gmtModified = ["gmt_modified"] as String[]
 isDeleteProperties = ["is_delete"] as String[]
-commonProperties = ["id", "gmt_create", "gmt_modified"] as String[]
+commonProperties = ["id", "gmt_create", "gmt_modified", "is_delete", "operater", "operater_id"] as String[]
 typeMapping = [
         (~/(?i)bigint/)                   : "Long",
         (~/(?i)int/)                      : "Integer",
@@ -63,13 +63,14 @@ def generate(table, dir) {
     def className = javaName(table.getName(), true)
     def fields = calcFields(table)
     def tableName = table.getName()
+    def tableComment = table.getComment()
 
 
 
     def modelDir = dir.toString() + "/model/"
     def modelFile = new File(modelDir)
     modelFile.mkdirs()
-    new File(modelDir, className + ".java").withPrintWriter { out -> model(out, className, fields) }
+    new File(modelDir, className + ".java").withPrintWriter { out -> model(out, className, tableComment, fields) }
 
 
 
@@ -77,7 +78,7 @@ def generate(table, dir) {
     def baseMapperDir = dir.toString() + "/mapper/base/"
     def baseMapperFile = new File(baseMapperDir)
     baseMapperFile.mkdirs()
-    new File(baseMapperDir, className + "BaseMapper.java").withPrintWriter { out -> baseMapper(out, className, fields) }
+    new File(baseMapperDir, className + "BaseMapper.java").withPrintWriter { out -> baseMapper(out, className, tableComment, fields) }
     def mapperFile = new File(mapperDir, className + "Mapper.java")
     if (!mapperFile.exists()) {
         mapperFile.withPrintWriter { out -> mapper(out, className, fields) }
@@ -96,7 +97,7 @@ def generate(table, dir) {
     }
 }
 
-def model(out, className, fields) {
+def model(out, className, tableComment, fields) {
     out.println "package ${packageName}.model;"
     out.println ""
     out.println "import io.swagger.annotations.ApiModel;"
@@ -110,7 +111,7 @@ def model(out, className, fields) {
     out.println "@Builder"
     out.println "@NoArgsConstructor"
     out.println "@AllArgsConstructor"
-    out.println "@ApiModel(value = \"$className\")"
+    out.println "@ApiModel(value = \"$className\", description = \"${tableComment}\")"
     out.println "public class $className implements Serializable {"
     out.println ""
     out.println "  public static final long serialVersionUID = 1L;"
@@ -119,7 +120,7 @@ def model(out, className, fields) {
         if (propertiesContainField(it.right, commonProperties)) {
             if (it.commoent != "") {
                 out.println " /**"
-                out.println "  * ${it.comment}【${it.dataType}】"
+                out.println "  * ${it.comment}【${it.colDataType}】"
                 out.println "  */"
             }
             if (it.commoent != "") {
@@ -131,7 +132,7 @@ def model(out, className, fields) {
         } else {
             if (it.commoent != "") {
                 out.println " /**"
-                out.println "  * ${it.comment}【${it.dataType}】"
+                out.println "  * ${it.comment}【${it.colDataType}】"
                 out.println "  */"
             }
             if (it.commoent != "") {
@@ -146,7 +147,7 @@ def model(out, className, fields) {
     out.println "}"
 }
 
-def baseMapper(out, className, fields) {
+def baseMapper(out, className, tableComment, fields) {
     out.println "package ${packageName}.mapper.base;"
     out.println ""
     out.println "import ${packageName}.model.${className};"
@@ -157,17 +158,47 @@ def baseMapper(out, className, fields) {
     out.println ""
     out.println "public interface ${className}BaseMapper {"
     out.println ""
-    out.println "    ${className} selectByPrimaryKey(@Param(\"id\") Long id);"
-    out.println ""
-    out.println "    List<${className}> selectByQuery(Map<String, Object> param);"
-    out.println ""
-    out.println "    Integer deleteByPrimaryKey(@Param(\"id\") Long id);"
-    out.println ""
-    out.println "    Integer count(Map<String, Object> param);"
-    out.println ""
+    out.println "    /**"
+    out.println "     * 新增${tableComment}"
+    out.println "     * @param param"
+    out.println "     * @return"
+    out.println "     */"
     out.println "    Long insert(Map<String, Object> param);"
     out.println ""
+    out.println "    /**"
+    out.println "     * 通过主键删除"
+    out.println "     * @param id"
+    out.println "     * @return"
+    out.println "     */"
+    out.println "    Integer deleteByPrimaryKey(@Param(\"id\") Long id);"
+    out.println ""
+    out.println "    /**"
+    out.println "     * 更新${tableComment}"
+    out.println "     * @param param"
+    out.println "     * @return"
+    out.println "     */"
     out.println "    Integer update(Map<String, Object> param);"
+    out.println ""
+    out.println "    /**"
+    out.println "     * 通过主键查询"
+    out.println "     * @param id"
+    out.println "     * @return"
+    out.println "     */"
+    out.println "    ${className} selectByPrimaryKey(@Param(\"id\") Long id);"
+    out.println ""
+    out.println "    /**"
+    out.println "     * 通过条件查询"
+    out.println "     * @param param"
+    out.println "     * @return"
+    out.println "     */"
+    out.println "    List<${className}> selectByQuery(Map<String, Object> param);"
+    out.println ""
+    out.println "    /**"
+    out.println "     * 通过条件查询条数"
+    out.println "     * @param param"
+    out.println "     * @return"
+    out.println "     */"
+    out.println "    Integer count(Map<String, Object> param);"
     out.println ""
     out.println "}"
 }
@@ -216,9 +247,6 @@ def baseXml(out, tableName, className, fields) {
     out.println "        <where>"
     out.println "            <include refid='query_filter'/>"
     out.println "        </where>"
-    out.println "        <if test='start != null'>"
-    out.println "            LIMIT #{start},#{limit}"
-    out.println "        </if>"
     out.println "    </select>"
     out.println ""
     if (propertiesContainField(isDeleteProperties, fields)) {
@@ -247,7 +275,7 @@ def baseXml(out, tableName, className, fields) {
             out.println "            ${it.right},"
         } else if (propertiesContainField(it.right, gmtModified)) {
             out.println "            ${it.right},"
-        } else if (propertiesContainField(it.right, isDeleteProperties)){
+        } else if (propertiesContainField(it.right, isDeleteProperties)) {
             out.println "            ${it.right},"
         } else {
             out.println "            <if test='${it.left} != null'>${it.right},</if>"
@@ -260,7 +288,7 @@ def baseXml(out, tableName, className, fields) {
             out.println "            now(),"
         } else if (propertiesContainField(it.right, gmtModified)) {
             out.println "            now(),"
-        } else if (propertiesContainField(it.right, isDeleteProperties)){
+        } else if (propertiesContainField(it.right, isDeleteProperties)) {
             out.println "            0,"
         } else {
             out.println "            <if test='${it.left} != null'>#{${it.left}},</if>"
@@ -331,14 +359,15 @@ def calcFields(table) {
         def dataType = dataTypeMapping.find { p, t -> p.matcher(spec).find() }.value
         def example = exampleMapping.find { p, t -> p.matcher(spec).find() }.value
         fields += [[
-                           left    : javaName(col.getName(), false),
-                           right   : col.getName(),
-                           name    : javaName(col.getName(), false),
-                           dataType: dataType,
-                           example : example,
-                           type    : typeStr,
-                           comment : col.getComment(),
-                           annos   : ""]]
+                           left       : javaName(col.getName(), false),
+                           right      : col.getName(),
+                           name       : javaName(col.getName(), false),
+                           dataType   : dataType,
+                           colDataType: col.getDataType(),
+                           example    : example,
+                           type       : typeStr,
+                           comment    : col.getComment(),
+                           annos      : ""]]
     }
 }
 

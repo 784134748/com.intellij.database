@@ -80,9 +80,6 @@ def baseXml(out, tableName, className, fields) {
     out.println "        <where>"
     out.println "            <include refid='query_filter'/>"
     out.println "        </where>"
-    out.println "        <if test='start != null'>"
-    out.println "            LIMIT #{start},#{limit}"
-    out.println "        </if>"
     out.println "    </select>"
     out.println ""
     if (propertiesContainField(isDeleteProperties, fields)) {

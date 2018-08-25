@@ -15,7 +15,7 @@ import java.time.LocalTime
  */
 
 packageName = ""
-commonProperties = ["id", "gmt_create", "gmt_modified", "is_delete", "operater"] as String[]
+commonProperties = ["id", "gmt_create", "gmt_modified", "is_delete", "operater", "operater_id"] as String[]
 typeMapping = [
         (~/(?i)bigint/)                   : "Long",
         (~/(?i)int/)                      : "Integer",
@@ -56,14 +56,15 @@ def generate(table, dir) {
         packageName = dir.toString().substring(index + 15).replaceAll("/", ".")
     }
     def className = javaName(table.getName(), true)
+    def tableComment = table.getComment()
     def fields = calcFields(table)
     def modelDir = dir.toString() + "/model/"
     def modelFile = new File(modelDir)
     modelFile.mkdirs()
-    new File(modelDir, className + ".java").withPrintWriter { out -> model(out, className, fields) }
+    new File(modelDir, className + ".java").withPrintWriter { out -> model(out, className, tableComment, fields) }
 }
 
-def model(out, className, fields) {
+def model(out, className, tableComment, fields) {
     out.println "package ${packageName}.model;"
     out.println ""
     out.println "import io.swagger.annotations.ApiModel;"
@@ -77,7 +78,7 @@ def model(out, className, fields) {
     out.println "@Builder"
     out.println "@NoArgsConstructor"
     out.println "@AllArgsConstructor"
-    out.println "@ApiModel(value = \"$className\")"
+    out.println "@ApiModel(value = \"$className\", description = \"${tableComment}\")"
     out.println "public class $className implements Serializable {"
     out.println ""
     out.println "  public static final long serialVersionUID = 1L;"
@@ -86,11 +87,11 @@ def model(out, className, fields) {
         if (propertiesContainField(it.right, commonProperties)) {
             if (it.commoent != "") {
                 out.println " /**"
-                out.println "  * ${it.comment}【${it.dataType}】"
+                out.println "  * ${it.comment}【${it.colDataType}】"
                 out.println "  */"
             }
             if (it.commoent != "") {
-                out.println "  @ApiModelProperty(value = \"${it.comment}\", dataType = \"${it.dataType}\", example = \"${it.example}\", hidden = true)"
+                out.println "  @ApiModelProperty(value = \"${it.comment}【${it.colDataType}】\", dataType = \"${it.dataType}\", example = \"${it.example}\", hidden = true)"
             }
             if (it.annos != "") out.println "  ${it.annos}"
             out.println "  private ${it.type} ${it.name};"
@@ -98,11 +99,11 @@ def model(out, className, fields) {
         } else {
             if (it.commoent != "") {
                 out.println " /**"
-                out.println "  * ${it.comment}【${it.dataType}】"
+                out.println "  * ${it.comment}【${it.colDataType}】"
                 out.println "  */"
             }
             if (it.commoent != "") {
-                out.println "  @ApiModelProperty(value = \"${it.comment}\", dataType = \"${it.dataType}\", example = \"${it.example}\")"
+                out.println "  @ApiModelProperty(value = \"${it.comment}【${it.colDataType}】\", dataType = \"${it.dataType}\", example = \"${it.example}\")"
             }
             if (it.annos != "") out.println "  ${it.annos}"
             out.println "  private ${it.type} ${it.name};"
@@ -140,14 +141,15 @@ def calcFields(table) {
         def dataType = dataTypeMapping.find { p, t -> p.matcher(spec).find() }.value
         def example = exampleMapping.find { p, t -> p.matcher(spec).find() }.value
         fields += [[
-                           left    : javaName(col.getName(), false),
-                           right   : col.getName(),
-                           name    : javaName(col.getName(), false),
-                           dataType: dataType,
-                           example : example,
-                           type    : typeStr,
-                           comment : col.getComment(),
-                           annos   : ""]]
+                           left       : javaName(col.getName(), false),
+                           right      : col.getName(),
+                           name       : javaName(col.getName(), false),
+                           dataType   : dataType,
+                           colDataType: col.getDataType(),
+                           example    : example,
+                           type       : typeStr,
+                           comment    : col.getComment(),
+                           annos      : ""]]
     }
 }
 

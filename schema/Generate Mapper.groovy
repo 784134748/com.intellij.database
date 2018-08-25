@@ -31,19 +31,20 @@ def generate(table, dir) {
         packageName = dir.toString().substring(index + 15).replaceAll("/", ".")
     }
     def className = javaName(table.getName(), true)
+    def tableComment = table.getComment()
     def fields = calcFields(table)
     def mapperDir = dir.toString() + "/mapper/"
     def baseMapperDir = dir.toString() + "/mapper/base/"
     def baseMapperFile = new File(baseMapperDir)
     baseMapperFile.mkdirs()
-    new File(baseMapperDir, className + "BaseMapper.java").withPrintWriter { out -> baseMapper(out, className, fields) }
+    new File(baseMapperDir, className + "BaseMapper.java").withPrintWriter { out -> baseMapper(out, className, tableComment, fields) }
     def mapperFile = new File(mapperDir, className + "Mapper.java")
     if (!mapperFile.exists()) {
         mapperFile.withPrintWriter { out -> mapper(out, className, fields) }
     }
 }
 
-def baseMapper(out, className, fields) {
+def baseMapper(out, className, tableComment, fields) {
     out.println "package ${packageName}.mapper.base;"
     out.println ""
     out.println "import ${packageName}.model.${className};"
@@ -54,17 +55,53 @@ def baseMapper(out, className, fields) {
     out.println ""
     out.println "public interface ${className}BaseMapper {"
     out.println ""
-    out.println "    ${className} selectByPrimaryKey(@Param(\"id\") Long id);"
-    out.println ""
-    out.println "    List<${className}> selectByQuery(Map<String, Object> param);"
-    out.println ""
-    out.println "    Integer deleteByPrimaryKey(@Param(\"id\") Long id);"
-    out.println ""
-    out.println "    Integer count(Map<String, Object> param);"
-    out.println ""
+    out.println "    /**"
+    out.println "     * 新增${tableComment}"
+    out.println "     *"
+    out.println "     * @param param"
+    out.println "     * @return"
+    out.println "     */"
     out.println "    Long insert(Map<String, Object> param);"
     out.println ""
+    out.println "    /**"
+    out.println "     * 通过主键删除"
+    out.println "     *"
+    out.println "     * @param id"
+    out.println "     * @return"
+    out.println "     */"
+    out.println "    Integer deleteByPrimaryKey(@Param(\"id\") Long id);"
+    out.println ""
+    out.println "    /**"
+    out.println "     * 更新${tableComment}"
+    out.println "     *"
+    out.println "     * @param param"
+    out.println "     * @return"
+    out.println "     */"
     out.println "    Integer update(Map<String, Object> param);"
+    out.println ""
+    out.println "    /**"
+    out.println "     * 通过主键查询"
+    out.println "     *"
+    out.println "     * @param id"
+    out.println "     * @return"
+    out.println "     */"
+    out.println "    ${className} selectByPrimaryKey(@Param(\"id\") Long id);"
+    out.println ""
+    out.println "    /**"
+    out.println "     * 通过条件查询"
+    out.println "     *"
+    out.println "     * @param param"
+    out.println "     * @return"
+    out.println "     */"
+    out.println "    List<${className}> selectByQuery(Map<String, Object> param);"
+    out.println ""
+    out.println "    /**"
+    out.println "     * 通过条件查询条数"
+    out.println "     *"
+    out.println "     * @param param"
+    out.println "     * @return"
+    out.println "     */"
+    out.println "    Integer count(Map<String, Object> param);"
     out.println ""
     out.println "}"
 }

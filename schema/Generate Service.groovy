@@ -36,6 +36,7 @@ def generate(table, dir) {
         basePackageName = packageName.toString().substring(0, index)
     }
     def className = javaName(table.getName(), true)
+    def tableComment = table.getComment()
     def paramName = javaName(table.getName(), false)
     def fields = calcFields(table)
     def serviceDir = dir.toString() + "/service/"
@@ -43,7 +44,7 @@ def generate(table, dir) {
     def serviceImplFile = new File(serviceImplDir)
     serviceImplFile.mkdirs()
     new File(serviceImplDir, className + "ServiceImpl.java").withPrintWriter { out -> serviceImpl(out, className, paramName, fields) }
-    new File(serviceDir, className + "Service.java").withPrintWriter { out -> service(out, className, paramName, fields) }
+    new File(serviceDir, className + "Service.java").withPrintWriter { out -> service(out, className, tableComment, paramName, fields) }
 }
 
 def serviceImpl(out, className, paramName, fields) {
@@ -135,7 +136,7 @@ def serviceImpl(out, className, paramName, fields) {
     out.println "}"
 }
 
-def service(out, className, paramName, fields) {
+def service(out, className, tableComment, paramName, fields) {
     out.println "package ${packageName}.service;"
     out.println ""
     out.println "import ${packageName}.model.${className};"
@@ -143,14 +144,46 @@ def service(out, className, paramName, fields) {
     out.println ""
     out.println "public interface ${className}Service {"
     out.println ""
+    out.println "    /**"
+    out.println "     * 新增${tableComment}"
+    out.println "     *"
+    out.println "     * @param ${paramName}"
+    out.println "     * @return"
+    out.println "     */"
     out.println "    ResponseEntity insert(${className} ${paramName});"
     out.println ""
+    out.println "    /**"
+    out.println "     * 通过主键删除"
+    out.println "     *"
+    out.println "     * @param id"
+    out.println "     * @return"
+    out.println "     */"
     out.println "    ResponseEntity deleteByPrimaryKey(Long id);"
     out.println ""
+    out.println "    /**"
+    out.println "     * 更新${tableComment}"
+    out.println "     *"
+    out.println "     * @param ${paramName}"
+    out.println "     * @return"
+    out.println "     */"
     out.println "    ResponseEntity update(${className} ${paramName});"
     out.println ""
+    out.println "    /**"
+    out.println "     * 通过主键查询"
+    out.println "     *"
+    out.println "     * @param id"
+    out.println "     * @return"
+    out.println "     */"
     out.println "    ResponseEntity selectByPrimaryKey(Long id);"
     out.println ""
+    out.println "    /**"
+    out.println "     * 通过条件查询"
+    out.println "     *"
+    out.println "     * @param pageNum"
+    out.println "     * @param pageSize"
+    out.println "     * @param ${paramName}"
+    out.println "     * @return"
+    out.println "     */"
     out.println "    ResponseEntity selectByQuery(Integer pageNum, Integer pageSize, ${className} ${paramName});"
     out.println ""
     out.println "}"
