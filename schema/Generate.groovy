@@ -16,6 +16,7 @@ import java.time.LocalTime
  */
 
 packageName = ""
+basePackageName = ""
 gmtCreate = ["gmt_create"] as String[]
 gmtModified = ["gmt_modified"] as String[]
 isDeleteProperties = ["is_delete"] as String[]
@@ -59,6 +60,10 @@ def generate(table, dir) {
     int index = dir.toString().lastIndexOf("/src/main/java/")
     if (index != -1) {
         packageName = dir.toString().substring(index + 15).replaceAll("/", ".")
+    }
+    index_last = packageName.lastIndexOf(".")
+    if (index_last != -1) {
+        basePackageName = packageName.toString().substring(0, index_last)
     }
     def className = javaName(table.getName(), true)
     def fields = calcFields(table)
@@ -160,6 +165,7 @@ def baseMapper(out, className, tableComment, fields) {
     out.println ""
     out.println "    /**"
     out.println "     * 新增${tableComment}"
+    out.println "     *"
     out.println "     * @param param"
     out.println "     * @return"
     out.println "     */"
@@ -167,6 +173,7 @@ def baseMapper(out, className, tableComment, fields) {
     out.println ""
     out.println "    /**"
     out.println "     * 通过主键删除"
+    out.println "     *"
     out.println "     * @param id"
     out.println "     * @return"
     out.println "     */"
@@ -174,6 +181,7 @@ def baseMapper(out, className, tableComment, fields) {
     out.println ""
     out.println "    /**"
     out.println "     * 更新${tableComment}"
+    out.println "     *"
     out.println "     * @param param"
     out.println "     * @return"
     out.println "     */"
@@ -181,6 +189,7 @@ def baseMapper(out, className, tableComment, fields) {
     out.println ""
     out.println "    /**"
     out.println "     * 通过主键查询"
+    out.println "     *"
     out.println "     * @param id"
     out.println "     * @return"
     out.println "     */"
@@ -188,13 +197,23 @@ def baseMapper(out, className, tableComment, fields) {
     out.println ""
     out.println "    /**"
     out.println "     * 通过条件查询"
+    out.println "     *"
     out.println "     * @param param"
     out.println "     * @return"
     out.println "     */"
     out.println "    List<${className}> selectByQuery(Map<String, Object> param);"
     out.println ""
     out.println "    /**"
+    out.println "     * 通过条件获取下拉项"
+    out.println "     *"
+    out.println "     * @param param"
+    out.println "     * @return"
+    out.println "     */"
+    out.println "    List<${basePackageName}.core.common.Select> getSelectByQuery(Map<String, Object> param);"
+    out.println ""
+    out.println "    /**"
     out.println "     * 通过条件查询条数"
+    out.println "     *"
     out.println "     * @param param"
     out.println "     * @return"
     out.println "     */"
@@ -238,6 +257,13 @@ def baseXml(out, tableName, className, fields) {
     out.println "        <include refid='Base_Column_List' />"
     out.println "        from ${tableName} "
     out.println "        where id = #{id}"
+    out.println "    </select>"
+    out.println ""
+    out.println "    <select id='getSelectByQuery' resultType='${basePackageName}.core.common.Select' parameterType='java.util.Map'>"
+    out.println "        select id as label, id as value from ${tableName}"
+    out.println "        <where>"
+    out.println "            <include refid='query_filter'/>"
+    out.println "        </where>"
     out.println "    </select>"
     out.println ""
     out.println "    <select id='selectByQuery' resultType='${packageName}.model.${className}' parameterType='java.util.Map'>"
@@ -301,11 +327,7 @@ def baseXml(out, tableName, className, fields) {
     out.println "        update ${tableName}"
     out.println "        <set>"
     fields.each() {
-        if (propertiesContainField(it.right, gmtModified)) {
-            out.println "            <if test='${it.left}'>${it.right} = now(),</if>"
-        } else {
-            out.println "            <if test='${it.left}'>${it.right} = #{${it.left}},</if>"
-        }
+        out.println "            <if test='${it.left} != null'>${it.right} = #{${it.left}},</if>"
     }
     out.println "        </set>"
     out.println "        where id = #{id}"

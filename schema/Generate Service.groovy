@@ -31,9 +31,9 @@ def generate(table, dir) {
     if (index != -1) {
         packageName = dir.toString().substring(index + 15).replaceAll("/", ".")
     }
-    index = packageName.lastIndexOf(".")
-    if (index != -1) {
-        basePackageName = packageName.toString().substring(0, index)
+    index_last = packageName.lastIndexOf(".")
+    if (index_last != -1) {
+        basePackageName = packageName.toString().substring(0, index_last)
     }
     def className = javaName(table.getName(), true)
     def tableComment = table.getComment()
@@ -77,7 +77,7 @@ def serviceImpl(out, className, paramName, fields) {
     out.println "        if (${paramName} == null) {"
     out.println "            return ResponseEntity.ok(Result.success(HttpStatus.BAD_REQUEST));"
     out.println "        }"
-    out.println "        ${paramName}Mapper.insert(Param2.toMap(${paramName}));"
+    out.println "        ${paramName}Mapper.insert(Param2.getInsertParams(${paramName}));"
     out.println "        return ResponseEntity.ok(Result.success(HttpStatus.CREATED));"
     out.println "    }"
     out.println ""
@@ -98,7 +98,7 @@ def serviceImpl(out, className, paramName, fields) {
     out.println "        if (${paramName} == null) {"
     out.println "            return ResponseEntity.ok(Result.success(HttpStatus.BAD_REQUEST));"
     out.println "        }"
-    out.println "        Integer affectedRows = ${paramName}Mapper.update(Param2.toMap(${paramName}));"
+    out.println "        Integer affectedRows = ${paramName}Mapper.update(Param2.getUpdateParams(${paramName}));"
     out.println "        if (affectedRows < 1) {"
     out.println "            return ResponseEntity.ok(Result.success(HttpStatus.NOT_FOUND));"
     out.println "        }"
@@ -125,10 +125,24 @@ def serviceImpl(out, className, paramName, fields) {
     out.println "            return ResponseEntity.ok().body(Result.success(HttpStatus.BAD_REQUEST));"
     out.println "        }"
     out.println "        PageHelper.startPage(pageNum, pageSize);"
-    out.println "        List<${className}> ${paramName}List = ${paramName}Mapper.selectByQuery(Param2.toNotContainBlankMap(${paramName}));"
+    out.println "        List<${className}> ${paramName}List = ${paramName}Mapper.selectByQuery(Param2.getQueryParams(${paramName}));"
     out.println "        Long total = ((Page) ${paramName}List).getTotal();"
     out.println "        Result result = Result.success(HttpStatus.OK);"
     out.println "        result.setEntry(${paramName}List);"
+    out.println "        result.setTotal(total);"
+    out.println "        return ResponseEntity.ok(result);"
+    out.println "    }"
+    out.println ""
+    out.println "    @Override"
+    out.println "    public ResponseEntity getSelectByQuery(Integer pageNum, Integer pageSize, ${className} ${paramName}) {"
+    out.println "        if (${paramName} == null || pageNum < 1 || pageSize < 1) {"
+    out.println "            return ResponseEntity.ok().body(Result.success(HttpStatus.BAD_REQUEST));"
+    out.println "        }"
+    out.println "        PageHelper.startPage(pageNum, pageSize);"
+    out.println "        List<${basePackageName}.core.common.Select> selectList = ${paramName}Mapper.getSelectByQuery(Param2.getQueryParams(${paramName}));"
+    out.println "        Long total = ((Page) selectList).getTotal();"
+    out.println "        Result result = Result.success(HttpStatus.OK);"
+    out.println "        result.setEntry(selectList);"
     out.println "        result.setTotal(total);"
     out.println "        return ResponseEntity.ok(result);"
     out.println "    }"
@@ -185,6 +199,16 @@ def service(out, className, tableComment, paramName, fields) {
     out.println "     * @return"
     out.println "     */"
     out.println "    ResponseEntity selectByQuery(Integer pageNum, Integer pageSize, ${className} ${paramName});"
+    out.println ""
+    out.println "    /**"
+    out.println "     * 通过条件获得下拉项"
+    out.println "     *"
+    out.println "     * @param pageNum"
+    out.println "     * @param pageSize"
+    out.println "     * @param ${paramName}"
+    out.println "     * @return"
+    out.println "     */"
+    out.println "    ResponseEntity getSelectByQuery(Integer pageNum, Integer pageSize, ${className} ${paramName});"
     out.println ""
     out.println "}"
 }

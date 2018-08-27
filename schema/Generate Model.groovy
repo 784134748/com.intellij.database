@@ -15,6 +15,7 @@ import java.time.LocalTime
  */
 
 packageName = ""
+basePackageName = ""
 commonProperties = ["id", "gmt_create", "gmt_modified", "is_delete", "operater", "operater_id"] as String[]
 typeMapping = [
         (~/(?i)bigint/)                   : "Long",
@@ -54,6 +55,10 @@ def generate(table, dir) {
     int index = dir.toString().lastIndexOf("/src/main/java/")
     if (index != -1) {
         packageName = dir.toString().substring(index + 15).replaceAll("/", ".")
+    }
+    index_last = packageName.lastIndexOf(".")
+    if (index_last != -1) {
+        basePackageName = packageName.toString().substring(0, index_last)
     }
     def className = javaName(table.getName(), true)
     def tableComment = table.getComment()

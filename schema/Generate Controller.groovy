@@ -31,9 +31,9 @@ def generate(table, dir) {
     if (index != -1) {
         packageName = dir.toString().substring(index + 15).replaceAll("/", ".")
     }
-    index = packageName.lastIndexOf(".")
-    if (index != -1) {
-        basePackageName = packageName.toString().substring(0, index)
+    index_last = packageName.lastIndexOf(".")
+    if (index_last != -1) {
+        basePackageName = packageName.toString().substring(0, index_last)
     }
     def className = javaName(table.getName(), true)
     def paramName = javaName(table.getName(), false)

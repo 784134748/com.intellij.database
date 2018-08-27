@@ -11,6 +11,7 @@ import com.intellij.database.util.DasUtil
  */
 
 packageName = ""
+basePackageName = ""
 typeMapping = [
         (~/(?i)bigint/)                   : "Long",
         (~/(?i)int/)                      : "Integer",
@@ -29,6 +30,10 @@ def generate(table, dir) {
     int index = dir.toString().lastIndexOf("/src/main/java/")
     if (index != -1) {
         packageName = dir.toString().substring(index + 15).replaceAll("/", ".")
+    }
+    index_last = packageName.lastIndexOf(".")
+    if (index_last != -1) {
+        basePackageName = packageName.toString().substring(0, index_last)
     }
     def className = javaName(table.getName(), true)
     def tableComment = table.getComment()
@@ -94,6 +99,14 @@ def baseMapper(out, className, tableComment, fields) {
     out.println "     * @return"
     out.println "     */"
     out.println "    List<${className}> selectByQuery(Map<String, Object> param);"
+    out.println ""
+    out.println "    /**"
+    out.println "     * 通过条件获取下拉项"
+    out.println "     *"
+    out.println "     * @param param"
+    out.println "     * @return"
+    out.println "     */"
+    out.println "    List<${basePackageName}.core.common.Select> getSelectByQuery(Map<String, Object> param);"
     out.println ""
     out.println "    /**"
     out.println "     * 通过条件查询条数"

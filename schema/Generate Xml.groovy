@@ -12,6 +12,7 @@ import org.apache.commons.lang3.StringUtils
  */
 
 packageName = ""
+basePackageName = ""
 gmtCreate = ["gmt_create"] as String[]
 gmtModified = ["gmt_modified"] as String[]
 isDeleteProperties = ["is_delete"] as String[]
@@ -33,6 +34,10 @@ def generate(table, dir) {
     int index = dir.toString().lastIndexOf("/src/main/java/")
     if (index != -1) {
         packageName = dir.toString().substring(index + 15).replaceAll("/", ".")
+    }
+    index_last = packageName.lastIndexOf(".")
+    if (index_last != -1) {
+        basePackageName = packageName.toString().substring(0, index_last)
     }
     def className = javaName(table.getName(), true)
     def fields = calcFields(table)
@@ -73,6 +78,13 @@ def baseXml(out, tableName, className, fields) {
     out.println "        where id = #{id}"
     out.println "    </select>"
     out.println ""
+    out.println "    <select id='getSelectByQuery' resultType='${basePackageName}.core.common.Select' parameterType='java.util.Map'>"
+    out.println "        select id as label, id as value from ${tableName}"
+    out.println "        <where>"
+    out.println "            <include refid='query_filter'/>"
+    out.println "        </where>"
+    out.println "    </select>"
+    out.println ""
     out.println "    <select id='selectByQuery' resultType='${packageName}.model.${className}' parameterType='java.util.Map'>"
     out.println "        select "
     out.println "        <include refid='Base_Column_List' />"
@@ -108,7 +120,7 @@ def baseXml(out, tableName, className, fields) {
             out.println "            ${it.right},"
         } else if (propertiesContainField(it.right, gmtModified)) {
             out.println "            ${it.right},"
-        } else if (propertiesContainField(it.right, isDeleteProperties)){
+        } else if (propertiesContainField(it.right, isDeleteProperties)) {
             out.println "            ${it.right},"
         } else {
             out.println "            <if test='${it.left} != null'>${it.right},</if>"
@@ -121,7 +133,7 @@ def baseXml(out, tableName, className, fields) {
             out.println "            now(),"
         } else if (propertiesContainField(it.right, gmtModified)) {
             out.println "            now(),"
-        } else if (propertiesContainField(it.right, isDeleteProperties)){
+        } else if (propertiesContainField(it.right, isDeleteProperties)) {
             out.println "            0,"
         } else {
             out.println "            <if test='${it.left} != null'>#{${it.left}},</if>"
@@ -134,11 +146,7 @@ def baseXml(out, tableName, className, fields) {
     out.println "        update ${tableName}"
     out.println "        <set>"
     fields.each() {
-        if (propertiesContainField(it.right, gmtModified)) {
-            out.println "            <if test='${it.left}'>${it.right} = now(),</if>"
-        } else {
-            out.println "            <if test='${it.left}'>${it.right} = #{${it.left}},</if>"
-        }
+        out.println "            <if test='${it.left} != null'>${it.right} = #{${it.left}},</if>"
     }
     out.println "        </set>"
     out.println "        where id = #{id}"
