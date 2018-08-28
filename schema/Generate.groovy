@@ -335,10 +335,11 @@ def baseXml(out, tableName, className, fields) {
     out.println ""
     out.println "    <sql id='query_filter'>"
     fields.each() {
-        if (propertiesContainField(it.right, isDeleteProperties)) {
-            out.println "        and ${it.right} != 1"
+        if (propertiesContainField(it.right, gmtCreate)) {
+        } else if (propertiesContainField(it.right, gmtModified)) {
+            out.println "            ${it.right} = now(),"
         } else {
-            out.println "        <if test='${it.left} != null'>and ${it.right} = #{${it.left}}</if>"
+            out.println "            <if test='${it.left} != null'>${it.right} = #{${it.left}},</if>"
         }
     }
     out.println "    </sql>"
