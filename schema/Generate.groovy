@@ -46,10 +46,10 @@ exampleMapping = [
         (~/(?i)bigint/)                   : "1",
         (~/(?i)int/)                      : "1",
         (~/(?i)float|double|decimal|real/): "1.00",
-        (~/(?i)datetime|timestamp/)       : LocalDateTime.now(),
-        (~/(?i)date/)                     : LocalDate.now(),
-        (~/(?i)time/)                     : LocalTime.now(),
-        (~/(?i)/)                         : "占位符"
+        (~/(?i)datetime|timestamp/)       : "2018-09-10 10:30:00",
+        (~/(?i)date/)                     : "2018-09-10 10:30:00",
+        (~/(?i)time/)                     : "2018-09-10 10:30:00",
+        (~/(?i)/)                         : ""
 ]
 
 FILES.chooseDirectoryAndSave("Choose directory", "Choose where to store generated files") { dir ->
@@ -196,6 +196,14 @@ def baseMapper(out, className, tableComment, fields) {
     out.println "    ${className} selectByPrimaryKey(@Param(\"id\") Long id);"
     out.println ""
     out.println "    /**"
+    out.println "     * 通过条件查询One"
+    out.println "     *"
+    out.println "     * @param param"
+    out.println "     * @return"
+    out.println "     */"
+    out.println "    ${className} selectOneByQuery(Map<String, Object> param);"
+    out.println ""
+    out.println "    /**"
     out.println "     * 通过条件查询"
     out.println "     *"
     out.println "     * @param param"
@@ -264,6 +272,16 @@ def baseXml(out, tableName, className, fields) {
     out.println "        <where>"
     out.println "            <include refid='query_filter'/>"
     out.println "        </where>"
+    out.println "    </select>"
+    out.println ""
+    out.println "    <select id='selectOneByQuery' resultType='${packageName}.model.${className}' parameterType='java.util.Map'>"
+    out.println "        select "
+    out.println "        <include refid='Base_Column_List' />"
+    out.println "        from ${tableName} "
+    out.println "        <where>"
+    out.println "            <include refid='query_filter'/>"
+    out.println "        </where>"
+    out.println "        Limit 1"
     out.println "    </select>"
     out.println ""
     out.println "    <select id='selectByQuery' resultType='${packageName}.model.${className}' parameterType='java.util.Map'>"
@@ -335,9 +353,10 @@ def baseXml(out, tableName, className, fields) {
     out.println ""
     out.println "    <sql id='query_filter'>"
     fields.each() {
-        if (propertiesContainField(it.right, gmtCreate)) {
+        if (propertiesContainField(it.right, isDeleteProperties)) {
+            out.println "        and ${it.right} != 1"
         } else {
-            out.println "            <if test='${it.left} != null'>${it.right} = #{${it.left}},</if>"
+            out.println "        <if test='${it.left} != null'>and ${it.right} = #{${it.left}}</if>"
         }
     }
     out.println "    </sql>"
