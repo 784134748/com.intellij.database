@@ -47,14 +47,16 @@ exampleMapping = [
         (~/(?i)/)                         : "占位符"
 ]
 
+sepa = java.io.File.separator
+
 FILES.chooseDirectoryAndSave("Choose directory", "Choose where to store generated files") { dir ->
     SELECTION.filter { it instanceof DasTable }.each { generate(it, dir) }
 }
 
 def generate(table, dir) {
-    int index = dir.toString().lastIndexOf("/src/main/java/")
+    int index = dir.toString().lastIndexOf(sepa + "src" + sepa + "main" + sepa + "java" + sepa)
     if (index != -1) {
-        packageName = dir.toString().substring(index + 15).replaceAll("/", ".")
+        packageName = dir.toString().substring(index + 15).replaceAll(sepa, ".")
     }
     index_last = packageName.lastIndexOf(".")
     if (index_last != -1) {
@@ -63,7 +65,7 @@ def generate(table, dir) {
     def className = javaName(table.getName(), true)
     def tableComment = table.getComment()
     def fields = calcFields(table)
-    def modelDir = dir.toString() + "/model/"
+    def modelDir = dir.toString() + sepa + "model" + sepa
     def modelFile = new File(modelDir)
     modelFile.mkdirs()
     new File(modelDir, className + ".java").withPrintWriter { out -> model(out, className, tableComment, fields) }

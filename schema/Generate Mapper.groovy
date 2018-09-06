@@ -22,14 +22,16 @@ typeMapping = [
         (~/(?i)/)                         : "String"
 ]
 
+sepa = java.io.File.separator
+
 FILES.chooseDirectoryAndSave("Choose directory", "Choose where to store generated files") { dir ->
     SELECTION.filter { it instanceof DasTable }.each { generate(it, dir) }
 }
 
 def generate(table, dir) {
-    int index = dir.toString().lastIndexOf("/src/main/java/")
+    int index = dir.toString().lastIndexOf(sepa + "src" + sepa + "main" + sepa + "java" + sepa)
     if (index != -1) {
-        packageName = dir.toString().substring(index + 15).replaceAll("/", ".")
+        packageName = dir.toString().substring(index + 15).replaceAll(sepa, ".")
     }
     index_last = packageName.lastIndexOf(".")
     if (index_last != -1) {
@@ -38,8 +40,8 @@ def generate(table, dir) {
     def className = javaName(table.getName(), true)
     def tableComment = table.getComment()
     def fields = calcFields(table)
-    def mapperDir = dir.toString() + "/mapper/"
-    def baseMapperDir = dir.toString() + "/mapper/base/"
+    def mapperDir = dir.toString() + sepa + "mapper" + sepa
+    def baseMapperDir = dir.toString() + sepa + "mapper" + sepa + "base" + sepa
     def baseMapperFile = new File(baseMapperDir)
     baseMapperFile.mkdirs()
     new File(baseMapperDir, className + "BaseMapper.java").withPrintWriter { out -> baseMapper(out, className, tableComment, fields) }

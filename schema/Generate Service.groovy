@@ -22,14 +22,16 @@ typeMapping = [
         (~/(?i)/)                         : "String"
 ]
 
+sepa = java.io.File.separator
+
 FILES.chooseDirectoryAndSave("Choose directory", "Choose where to store generated files") { dir ->
     SELECTION.filter { it instanceof DasTable }.each { generate(it, dir) }
 }
 
 def generate(table, dir) {
-    int index = dir.toString().lastIndexOf("/src/main/java/")
+    int index = dir.toString().lastIndexOf(sepa + "src" + sepa + "main" + sepa + "java" + sepa)
     if (index != -1) {
-        packageName = dir.toString().substring(index + 15).replaceAll("/", ".")
+        packageName = dir.toString().substring(index + 15).replaceAll(sepa, ".")
     }
     index_last = packageName.lastIndexOf(".")
     if (index_last != -1) {
@@ -39,8 +41,8 @@ def generate(table, dir) {
     def tableComment = table.getComment()
     def paramName = javaName(table.getName(), false)
     def fields = calcFields(table)
-    def serviceDir = dir.toString() + "/service/"
-    def serviceImplDir = dir.toString() + "/service/impl/"
+    def serviceDir = dir.toString() + sepa + "service" + sepa
+    def serviceImplDir = dir.toString() + sepa + "service" + sepa + "impl" + sepa
     def serviceImplFile = new File(serviceImplDir)
     serviceImplFile.mkdirs()
     new File(serviceImplDir, className + "ServiceImpl.java").withPrintWriter { out -> serviceImpl(out, className, paramName, fields) }

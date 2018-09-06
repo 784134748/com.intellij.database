@@ -30,10 +30,12 @@ FILES.chooseDirectoryAndSave("Choose directory", "Choose where to store generate
     SELECTION.filter { it instanceof DasTable }.each { generate(it, dir) }
 }
 
+sepa = java.io.File.separator
+
 def generate(table, dir) {
-    int index = dir.toString().lastIndexOf("/src/main/java/")
+    int index = dir.toString().lastIndexOf(sepa + "src" + sepa + "main" + sepa + "java" + sepa)
     if (index != -1) {
-        packageName = dir.toString().substring(index + 15).replaceAll("/", ".")
+        packageName = dir.toString().substring(index + 15).replaceAll(sepa, ".")
     }
     def className = javaName(table.getName(), true)
     def fields = calcFields(table)
@@ -41,15 +43,15 @@ def generate(table, dir) {
 
 
 
-    def modelDir = dir.toString() + "/model/"
+    def modelDir = dir.toString() + sepa + "model" + sepa
     def modelFile = new File(modelDir)
     modelFile.mkdirs()
     new File(modelDir, className + ".java").withPrintWriter { out -> model(out, className, fields) }
 
 
 
-    def mapperDir = dir.toString() + "/mapper/"
-    def baseMapperDir = dir.toString() + "/mapper/base/"
+    def mapperDir = dir.toString() + sepa + "mapper" + sepa
+    def baseMapperDir = dir.toString() + sepa + "mapper" + "base" + sepa
     def baseMapperFile = new File(baseMapperDir)
     baseMapperFile.mkdirs()
     new File(baseMapperDir, className + "BaseMapper.java").withPrintWriter { out -> baseMapper(out, className, fields) }
@@ -60,8 +62,8 @@ def generate(table, dir) {
 
 
 
-    def xmlDir = dir.toString().substring(0, index + 10) + "/resources/mapper/"
-    def baseXmlDir = dir.toString().substring(0, index + 10) + "/resources/mapper/base/"
+    def xmlDir = dir.toString().substring(0, index + 10) + sepa + "resources" + sepa + "mapper" + sepa
+    def baseXmlDir = dir.toString().substring(0, index + 10) + sepa + "resources" + sepa + "mapper" + sepa + "base" + sepa
     def baseXmlFile = new File(baseXmlDir)
     baseXmlFile.mkdirs()
     new File(baseXmlDir, className + "BaseMapper.xml").withPrintWriter { out -> baseXml(out, tableName, className, fields) }
