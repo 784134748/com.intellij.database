@@ -68,7 +68,7 @@ def generate(table, dir) {
     def modelDir = dir.toString() + sepa + "model" + sepa
     def modelFile = new File(modelDir)
     modelFile.mkdirs()
-    new File(modelDir, className + ".java").withPrintWriter { out -> model(out, className, tableComment, fields) }
+    new File(modelDir, className + "Model.java").withPrintWriter { out -> model(out, className, tableComment, fields) }
 }
 
 def model(out, className, tableComment, fields) {
@@ -85,8 +85,8 @@ def model(out, className, tableComment, fields) {
     out.println "@Builder"
     out.println "@NoArgsConstructor"
     out.println "@AllArgsConstructor"
-    out.println "@ApiModel(value = \"$className\", description = \"${tableComment}\")"
-    out.println "public class $className implements Serializable {"
+    out.println "@ApiModel(value = \"${className}Model\", description = \"${tableComment}\")"
+    out.println "public class ${className}Model implements Serializable {"
     out.println ""
     out.println "  public static final long serialVersionUID = 1L;"
     out.println ""
