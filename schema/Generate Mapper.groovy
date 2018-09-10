@@ -38,23 +38,24 @@ def generate(table, dir) {
         basePackageName = packageName.toString().substring(0, index_last)
     }
     def className = javaName(table.getName(), true)
+    def paramName = javaName(table.getName(), false)
     def tableComment = table.getComment()
     def fields = calcFields(table)
     def mapperDir = dir.toString() + sepa + "mapper" + sepa
     def baseMapperDir = dir.toString() + sepa + "mapper" + sepa + "base" + sepa
     def baseMapperFile = new File(baseMapperDir)
     baseMapperFile.mkdirs()
-    new File(baseMapperDir, className + "BaseMapper.java").withPrintWriter { out -> baseMapper(out, className, tableComment, fields) }
+    new File(baseMapperDir, className + "BaseMapper.java").withPrintWriter { out -> baseMapper(out, className, paramName, tableComment, fields) }
     def mapperFile = new File(mapperDir, className + "Mapper.java")
     if (!mapperFile.exists()) {
         mapperFile.withPrintWriter { out -> mapper(out, className, fields) }
     }
 }
 
-def baseMapper(out, className, tableComment, fields) {
+def baseMapper(out, className, paramName, tableComment, fields) {
     out.println "package ${packageName}.mapper.base;"
     out.println ""
-    out.println "import ${packageName}.model.${className};"
+    out.println "import ${packageName}.model.${className}Model;"
     out.println "import org.apache.ibatis.annotations.Param;"
     out.println ""
     out.println "import java.util.List;"
@@ -65,10 +66,10 @@ def baseMapper(out, className, tableComment, fields) {
     out.println "    /**"
     out.println "     * 新增${tableComment}"
     out.println "     *"
-    out.println "     * @param param"
+    out.println "     * @param ${paramName}Model"
     out.println "     * @return"
     out.println "     */"
-    out.println "    Long insert(Map<String, Object> param);"
+    out.println "    Integer insert(${className}Model ${paramName}Model);"
     out.println ""
     out.println "    /**"
     out.println "     * 通过主键删除"
@@ -93,6 +94,21 @@ def baseMapper(out, className, tableComment, fields) {
     out.println "     * @return"
     out.println "     */"
     out.println "    ${className}Model selectByPrimaryKey(@Param(\"id\") Long id);"
+    fields.each() {
+        String str = it.right
+        if (str.endsWith("_id")) {
+            def ForeignKey = javaName(it.right, true)
+            def foreignKey = javaName(it.right, false)
+            out.println ""
+            out.println "    /**"
+            out.println "     * 通过${foreignKey}查询"
+            out.println "     *"
+            out.println "     * @param ${foreignKey}"
+            out.println "     * @return"
+            out.println "     */"
+            out.println "    List<${className}Model> selectBy${ForeignKey}(@Param(\"${foreignKey}\") Long ${foreignKey});"
+        }
+    }
     out.println ""
     out.println "    /**"
     out.println "     * 通过条件查询One"

@@ -79,6 +79,20 @@ def baseXml(out, tableName, className, fields) {
     out.println "        from ${tableName} "
     out.println "        where id = #{id}"
     out.println "    </select>"
+    fields.each() {
+        String str = it.right
+        if (str.endsWith("_id")) {
+            def ForeignKey = javaName(it.right, true)
+            def foreignKey = javaName(it.right, false)
+            out.println ""
+            out.println "    <select id='selectBy${ForeignKey}' resultType='${packageName}.model.${className}Model' parameterType='java.lang.Long'>"
+            out.println "        select "
+            out.println "        <include refid='Base_Column_List' />"
+            out.println "        from ${tableName} "
+            out.println "        where ${it.right} = #{${foreignKey}}"
+            out.println "    </select>"
+        }
+    }
     out.println ""
     out.println "    <select id='getSelectBoxByQuery' resultType='${basePackageName}.core.common.SelectBox' parameterType='java.util.Map'>"
     out.println "        select id as label, id as value from ${tableName}"

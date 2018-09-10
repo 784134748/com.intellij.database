@@ -197,6 +197,21 @@ def baseMapper(out, className, paramName, tableComment, fields) {
     out.println "     * @return"
     out.println "     */"
     out.println "    ${className}Model selectByPrimaryKey(@Param(\"id\") Long id);"
+    fields.each() {
+        String str = it.right
+        if (str.endsWith("_id")) {
+            def ForeignKey = javaName(it.right, true)
+            def foreignKey = javaName(it.right, false)
+            out.println ""
+            out.println "    /**"
+            out.println "     * 通过${foreignKey}查询"
+            out.println "     *"
+            out.println "     * @param ${foreignKey}"
+            out.println "     * @return"
+            out.println "     */"
+            out.println "    List<${className}Model> selectBy${ForeignKey}(@Param(\"${foreignKey}\") Long ${foreignKey});"
+        }
+    }
     out.println ""
     out.println "    /**"
     out.println "     * 通过条件查询One"
@@ -269,6 +284,20 @@ def baseXml(out, tableName, className, fields) {
     out.println "        from ${tableName} "
     out.println "        where id = #{id}"
     out.println "    </select>"
+    fields.each() {
+        String str = it.right
+        if (str.endsWith("_id")) {
+            def ForeignKey = javaName(it.right, true)
+            def foreignKey = javaName(it.right, false)
+            out.println ""
+            out.println "    <select id='selectBy${ForeignKey}' resultType='${packageName}.model.${className}Model' parameterType='java.lang.Long'>"
+            out.println "        select "
+            out.println "        <include refid='Base_Column_List' />"
+            out.println "        from ${tableName} "
+            out.println "        where ${it.right} = #{${foreignKey}}"
+            out.println "    </select>"
+        }
+    }
     out.println ""
     out.println "    <select id='getSelectBoxByQuery' resultType='${basePackageName}.core.common.SelectBox' parameterType='java.util.Map'>"
     out.println "        select id as label, id as value from ${tableName}"
