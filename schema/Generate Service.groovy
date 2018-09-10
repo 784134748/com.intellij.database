@@ -79,7 +79,7 @@ def serviceImpl(out, className, paramName, fields) {
     out.println "        if (${paramName}Model == null) {"
     out.println "            return ResponseEntity.ok(Result.success(HttpStatus.BAD_REQUEST));"
     out.println "        }"
-    out.println "        ${paramName}Mapper.insert(Param2.getInsertParams(${paramName}Model));"
+    out.println "        ${paramName}Mapper.insert(${paramName}Model);"
     out.println "        return ResponseEntity.ok(Result.success(HttpStatus.CREATED));"
     out.println "    }"
     out.println ""

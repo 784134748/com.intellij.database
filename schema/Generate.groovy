@@ -68,6 +68,7 @@ def generate(table, dir) {
         basePackageName = packageName.toString().substring(0, index_last)
     }
     def className = javaName(table.getName(), true)
+    def paramName = javaName(table.getName(), false)
     def fields = calcFields(table)
     def tableName = table.getName()
     def tableComment = table.getComment()
@@ -85,7 +86,7 @@ def generate(table, dir) {
     def baseMapperDir = dir.toString() + sepa + "mapper" + sepa + "base" + sepa
     def baseMapperFile = new File(baseMapperDir)
     baseMapperFile.mkdirs()
-    new File(baseMapperDir, className + "BaseMapper.java").withPrintWriter { out -> baseMapper(out, className, tableComment, fields) }
+    new File(baseMapperDir, className + "BaseMapper.java").withPrintWriter { out -> baseMapper(out, className, paramName, tableComment, fields) }
     def mapperFile = new File(mapperDir, className + "Mapper.java")
     if (!mapperFile.exists()) {
         mapperFile.withPrintWriter { out -> mapper(out, className, fields) }
@@ -154,7 +155,7 @@ def model(out, className, tableComment, fields) {
     out.println "}"
 }
 
-def baseMapper(out, className, tableComment, fields) {
+def baseMapper(out, className, paramName, tableComment, fields) {
     out.println "package ${packageName}.mapper.base;"
     out.println ""
     out.println "import ${packageName}.model.${className}Model;"
@@ -168,10 +169,10 @@ def baseMapper(out, className, tableComment, fields) {
     out.println "    /**"
     out.println "     * 新增${tableComment}"
     out.println "     *"
-    out.println "     * @param param"
+    out.println "     * @param ${paramName}Model"
     out.println "     * @return"
     out.println "     */"
-    out.println "    Long insert(Map<String, Object> param);"
+    out.println "    Integer insert(${className}Model ${paramName}Model);"
     out.println ""
     out.println "    /**"
     out.println "     * 通过主键删除"
@@ -313,7 +314,7 @@ def baseXml(out, tableName, className, fields) {
     out.println "        </where>"
     out.println "    </select>"
     out.println ""
-    out.println "    <insert id='insert' parameterType='java.util.Map' useGeneratedKeys='true' keyProperty='id'>"
+    out.println "    <insert id='insert' parameterType='${packageName}.model.${className}Model' useGeneratedKeys='true' keyProperty='id'>"
     out.println "        insert into ${tableName}"
     out.println "        <trim prefix='(' suffix=')' suffixOverrides=','>"
     fields.each() {
