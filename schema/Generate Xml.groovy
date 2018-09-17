@@ -61,23 +61,24 @@ def baseXml(out, tableName, className, fields) {
     out.println "<!DOCTYPE mapper PUBLIC '-//mybatis.org//DTD Mapper 3.0//EN' 'http://mybatis.org/dtd/mybatis-3-mapper.dtd' >"
     out.println "<mapper namespace='${packageName}.mapper.base.${className}BaseMapper'>"
     out.println ""
-    out.println "    <sql id='Base_Column_List' >"
+    out.println "    <sql id='Base_Column_List'>"
     out.print "    "
     fields.each() {
         if (index != 0) {
             out.print ", "
         }
-        out.print "${it.right}"
+        out.print "${tableName}.${it.right}"
         index++
     }
     out.println ""
     out.println "    </sql>"
     out.println ""
-    out.println "    <select id='selectByPrimaryKey' resultType='${packageName}.model.${className}Model' parameterType='java.lang.Long'>"
+    out.println "    <select id='selectByPrimaryKey' resultType='${packageName}.model.${className}Model'"
+    out.println "            parameterType='java.util.Map'>"
     out.println "        select "
-    out.println "        <include refid='Base_Column_List' />"
+    out.println "        <include refid='Base_Column_List'/>"
     out.println "        from ${tableName} "
-    out.println "        where id = #{id}"
+    out.println "        where ${tableName}.id = #{id}"
     out.println "    </select>"
     fields.each() {
         String str = it.right
@@ -85,25 +86,28 @@ def baseXml(out, tableName, className, fields) {
             def ForeignKey = javaName(it.right, true)
             def foreignKey = javaName(it.right, false)
             out.println ""
-            out.println "    <select id='selectBy${ForeignKey}' resultType='${packageName}.model.${className}Model' parameterType='java.lang.Long'>"
+            out.println "    <select id='selectBy${ForeignKey}' resultType='${packageName}.model.${className}Model'"
+            out.println "            parameterType='java.lang.Long'>"
             out.println "        select "
-            out.println "        <include refid='Base_Column_List' />"
+            out.println "        <include refid='Base_Column_List'/>"
             out.println "        from ${tableName} "
-            out.println "        where ${it.right} = #{${foreignKey}}"
+            out.println "        where ${tableName}.${it.right} = #{${foreignKey}}"
             out.println "    </select>"
         }
     }
     out.println ""
-    out.println "    <select id='getSelectBoxByQuery' resultType='${basePackageName}.core.common.SelectBox' parameterType='java.util.Map'>"
-    out.println "        select id as label, id as value from ${tableName}"
+    out.println "    <select id='getSelectBoxByQuery' resultType='${basePackageName}.core.common.SelectBox'"
+    out.println "            parameterType='java.util.Map'>"
+    out.println "        select ${tableName}.id as label, ${tableName}.id as value from ${tableName}"
     out.println "        <where>"
     out.println "            <include refid='query_filter'/>"
     out.println "        </where>"
     out.println "    </select>"
     out.println ""
-    out.println "    <select id='selectOneByQuery' resultType='${packageName}.model.${className}Model' parameterType='java.util.Map'>"
+    out.println "    <select id='selectOneByQuery' resultType='${packageName}.model.${className}Model'"
+    out.println "            parameterType='java.util.Map'>"
     out.println "        select "
-    out.println "        <include refid='Base_Column_List' />"
+    out.println "        <include refid='Base_Column_List'/>"
     out.println "        from ${tableName} "
     out.println "        <where>"
     out.println "            <include refid='query_filter'/>"
@@ -111,9 +115,10 @@ def baseXml(out, tableName, className, fields) {
     out.println "        Limit 1"
     out.println "    </select>"
     out.println ""
-    out.println "    <select id='selectByQuery' resultType='${packageName}.model.${className}Model' parameterType='java.util.Map'>"
+    out.println "    <select id='selectByQuery' resultType='${packageName}.model.${className}Model'"
+    out.println "            parameterType='java.util.Map'>"
     out.println "        select "
-    out.println "        <include refid='Base_Column_List' />"
+    out.println "        <include refid='Base_Column_List'/>"
     out.println "        from ${tableName} "
     out.println "        <where>"
     out.println "            <include refid='query_filter'/>"
@@ -122,13 +127,48 @@ def baseXml(out, tableName, className, fields) {
     out.println ""
     if (propertiesContainField(isDeleteProperties, fields)) {
         out.println "    <delete id='deleteByPrimaryKey' parameterType='java.lang.Long'>"
-        out.println "        delete from ${tableName} where id = #{id}"
+        out.println "        delete from ${tableName} where ${tableName}.id = #{id}"
         out.println "    </delete>"
         out.println ""
     } else {
-        out.println "    <delete id='deleteByPrimaryKey' parameterType='java.lang.Long'>"
-        out.println "        update ${tableName} set ${isDeleteProperties[0]} = 1 where id = #{id}"
+        out.println "    <update id='deleteByPrimaryKey' parameterType='java.lang.Long'>"
+        out.println "        update ${tableName} set ${tableName}.${isDeleteProperties[0]} = 1 where ${tableName}.id = #{id}"
+        out.println "    </update>"
+        out.println ""
+    }
+    fields.each() {
+        String str = it.right
+        if (str.endsWith("_id")) {
+            def ForeignKey = javaName(it.right, true)
+            def foreignKey = javaName(it.right, false)
+            if (propertiesContainField(isDeleteProperties, fields)) {
+                out.println "    <delete id='deleteByPrimaryKey' parameterType='java.lang.Long'>"
+                out.println "        delete from ${tableName} where ${tableName}.${it.right} = #{${foreignKey}}"
+                out.println "    </delete>"
+                out.println ""
+            } else {
+                out.println "    <update id='deleteBy${ForeignKey}' parameterType='java.lang.Long'>"
+                out.println "        update ${tableName} set ${tableName}.${isDeleteProperties[0]} = 1 where ${tableName}.${it.right} = #{${foreignKey}}"
+                out.println "    </update>"
+                out.println ""
+            }
+        }
+    }
+    if (propertiesContainField(isDeleteProperties, fields)) {
+        out.println "    <select id='deleteByQuery' parameterType='java.util.Map'>"
+        out.println "        delete from ${tableName}"
+        out.println "        <where>"
+        out.println "            <include refid='query_filter'/>"
+        out.println "        </where>"
         out.println "    </delete>"
+        out.println ""
+    } else {
+        out.println "    <update id='deleteByQuery' parameterType='java.util.Map'>"
+        out.println "        update ${tableName} set ${tableName}.${isDeleteProperties[0]} = 1"
+        out.println "        <where>"
+        out.println "            <include refid='query_filter'/>"
+        out.println "        </where>"
+        out.println "    </update>"
         out.println ""
     }
     out.println "    <select id='count' resultType='java.lang.Integer' parameterType='java.util.Map'>"
@@ -143,13 +183,13 @@ def baseXml(out, tableName, className, fields) {
     out.println "        <trim prefix='(' suffix=')' suffixOverrides=','>"
     fields.each() {
         if (propertiesContainField(it.right, gmtCreate)) {
-            out.println "            ${it.right},"
+            out.println "            ${tableName}.${it.right},"
         } else if (propertiesContainField(it.right, gmtModified)) {
-            out.println "            ${it.right},"
+            out.println "            ${tableName}.${it.right},"
         } else if (propertiesContainField(it.right, isDeleteProperties)) {
-            out.println "            ${it.right},"
+            out.println "            ${tableName}.${it.right},"
         } else {
-            out.println "            <if test='${it.left} != null'>${it.right},</if>"
+            out.println "            <if test='${it.left} != null'>${tableName}.${it.right},</if>"
         }
     }
     out.println "        </trim>"
@@ -174,21 +214,21 @@ def baseXml(out, tableName, className, fields) {
     fields.each() {
         if (propertiesContainField(it.right, gmtCreate)) {
         } else if (propertiesContainField(it.right, gmtModified)) {
-            out.println "            ${it.right} = now(),"
+            out.println "            ${tableName}.${it.right} = now(),"
         } else {
-            out.println "            <if test='${it.left} != null'>${it.right} = #{${it.left}},</if>"
+            out.println "            <if test='${it.left} != null'>${tableName}.${it.right} = #{${it.left}},</if>"
         }
     }
     out.println "        </set>"
-    out.println "        where id = #{id}"
+    out.println "        where ${tableName}.id = #{id}"
     out.println "    </update>"
     out.println ""
     out.println "    <sql id='query_filter'>"
     fields.each() {
         if (propertiesContainField(it.right, isDeleteProperties)) {
-            out.println "        and ${it.right} != 1"
+            out.println "        and ${tableName}.${it.right} != 1"
         } else {
-            out.println "        <if test='${it.left} != null'>and ${it.right} = #{${it.left}}</if>"
+            out.println "        <if test='${it.left} != null'>and ${tableName}.${it.right} = #{${it.left}}</if>"
         }
     }
     out.println "    </sql>"

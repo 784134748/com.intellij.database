@@ -78,6 +78,29 @@ def baseMapper(out, className, paramName, tableComment, fields) {
     out.println "     * @return"
     out.println "     */"
     out.println "    Integer deleteByPrimaryKey(@Param(\"id\") Long id);"
+    fields.each() {
+        String str = it.right
+        if (str.endsWith("_id")) {
+            def ForeignKey = javaName(it.right, true)
+            def foreignKey = javaName(it.right, false)
+            out.println ""
+            out.println "    /**"
+            out.println "     * 通过${foreignKey}删除"
+            out.println "     *"
+            out.println "     * @param ${foreignKey}"
+            out.println "     * @return"
+            out.println "     */"
+            out.println "    Integer deleteBy${ForeignKey}(@Param(\"${foreignKey}\") Long ${foreignKey});"
+        }
+    }
+    out.println ""
+    out.println "    /**"
+    out.println "     * 通过条件删除"
+    out.println "     *"
+    out.println "     * @param param"
+    out.println "     * @return"
+    out.println "     */"
+    out.println "    Integer deleteByQuery(Map<String, Object> param);"
     out.println ""
     out.println "    /**"
     out.println "     * 更新${tableComment}"
