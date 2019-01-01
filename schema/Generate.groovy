@@ -20,7 +20,8 @@ basePackageName = ""
 gmtCreate = ["gmt_create"] as String[]
 gmtModified = ["gmt_modified"] as String[]
 isDeleteProperties = ["is_delete"] as String[]
-commonProperties = ["id", "gmt_create", "gmt_modified", "is_delete", "operater", "operater_id"] as String[]
+isDeletePropertieValue = 1
+commonProperties = ["id", "gmt_create", "gmt_modified", "is_delete", "operator", "operator_id"] as String[]
 typeMapping = [
         (~/(?i)bigint/)                   : "Long",
         (~/(?i)int/)                      : "Integer",
@@ -132,7 +133,7 @@ def model(out, className, tableComment, fields) {
                 out.println "  */"
             }
             if (it.commoent != "") {
-                out.println "  @ApiModelProperty(value = \"${it.comment}\", dataType = \"${it.dataType}\", example = \"${it.example}\", hidden = true)"
+                out.println "  @ApiModelProperty(value = \"${it.comment}\", dataType = \"${it.dataType}\", hidden = true)"
             }
             if (it.annos != "") out.println "  ${it.annos}"
             out.println "  private ${it.type} ${it.name};"
@@ -144,7 +145,7 @@ def model(out, className, tableComment, fields) {
                 out.println "  */"
             }
             if (it.commoent != "") {
-                out.println "  @ApiModelProperty(value = \"${it.comment}\", dataType = \"${it.dataType}\", example = \"${it.example}\")"
+                out.println "  @ApiModelProperty(value = \"${it.comment}\", dataType = \"${it.dataType}\")"
             }
             if (it.annos != "") out.println "  ${it.annos}"
             out.println "  private ${it.type} ${it.name};"
@@ -253,14 +254,6 @@ def baseMapper(out, className, paramName, tableComment, fields) {
     out.println "    List<${className}Model> selectByQuery(Map<String, Object> param);"
     out.println ""
     out.println "    /**"
-    out.println "     * 通过条件获取下拉项"
-    out.println "     *"
-    out.println "     * @param param"
-    out.println "     * @return"
-    out.println "     */"
-    out.println "    List<${basePackageName}.core.common.SelectBox> getSelectBoxByQuery(Map<String, Object> param);"
-    out.println ""
-    out.println "    /**"
     out.println "     * 通过条件查询条数"
     out.println "     *"
     out.println "     * @param param"
@@ -360,7 +353,7 @@ def baseXml(out, tableName, className, fields) {
         out.println ""
     } else {
         out.println "    <update id='deleteByPrimaryKey' parameterType='java.lang.Long'>"
-        out.println "        update ${tableName} set ${tableName}.${isDeleteProperties[0]} = 1 where ${tableName}.id = #{id}"
+        out.println "        update ${tableName} set ${tableName}.${isDeleteProperties[0]} = ${isDeletePropertieValue} where ${tableName}.id = #{id}"
         out.println "    </update>"
         out.println ""
     }
@@ -376,7 +369,7 @@ def baseXml(out, tableName, className, fields) {
                 out.println ""
             } else {
                 out.println "    <update id='deleteBy${ForeignKey}' parameterType='java.lang.Long'>"
-                out.println "        update ${tableName} set ${tableName}.${isDeleteProperties[0]} = 1 where ${tableName}.${it.right} = #{${foreignKey}}"
+                out.println "        update ${tableName} set ${tableName}.${isDeleteProperties[0]} = ${isDeletePropertieValue} where ${tableName}.${it.right} = #{${foreignKey}}"
                 out.println "    </update>"
                 out.println ""
             }
@@ -392,7 +385,7 @@ def baseXml(out, tableName, className, fields) {
         out.println ""
     } else {
         out.println "    <update id='deleteByQuery' parameterType='java.util.Map'>"
-        out.println "        update ${tableName} set ${tableName}.${isDeleteProperties[0]} = 1"
+        out.println "        update ${tableName} set ${tableName}.${isDeleteProperties[0]} = ${isDeletePropertieValue}"
         out.println "        <where>"
         out.println "            <include refid='query_filter'/>"
         out.println "        </where>"
@@ -454,7 +447,7 @@ def baseXml(out, tableName, className, fields) {
     out.println "    <sql id='query_filter'>"
     fields.each() {
         if (propertiesContainField(it.right, isDeleteProperties)) {
-            out.println "        and ${tableName}.${it.right} != 1"
+            out.println "        and ${tableName}.${it.right} != ${isDeletePropertieValue}"
         } else {
             out.println "        <if test='${it.left} != null'>and ${tableName}.${it.right} = #{${it.left}}</if>"
         }

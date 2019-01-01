@@ -16,6 +16,7 @@ basePackageName = ""
 gmtCreate = ["gmt_create"] as String[]
 gmtModified = ["gmt_modified"] as String[]
 isDeleteProperties = ["is_delete"] as String[]
+isDeletePropertieValue = 1
 typeMapping = [
         (~/(?i)bigint/)                   : "Long",
         (~/(?i)int/)                      : "Integer",
@@ -37,7 +38,7 @@ def generate(table, dir) {
     if (index != -1) {
         packageName = dir.toString().substring(index + 15).replaceAll(sepa, ".")
     }
-    index_last = packageName.lastIndexOf(".")
+    int index_last = packageName.lastIndexOf(".")
     if (index_last != -1) {
         basePackageName = packageName.toString().substring(0, index_last)
     }
@@ -132,7 +133,7 @@ def baseXml(out, tableName, className, fields) {
         out.println ""
     } else {
         out.println "    <update id='deleteByPrimaryKey' parameterType='java.lang.Long'>"
-        out.println "        update ${tableName} set ${tableName}.${isDeleteProperties[0]} = 1 where ${tableName}.id = #{id}"
+        out.println "        update ${tableName} set ${tableName}.${isDeleteProperties[0]} = ${isDeletePropertieValue} where ${tableName}.id = #{id}"
         out.println "    </update>"
         out.println ""
     }
@@ -148,7 +149,7 @@ def baseXml(out, tableName, className, fields) {
                 out.println ""
             } else {
                 out.println "    <update id='deleteBy${ForeignKey}' parameterType='java.lang.Long'>"
-                out.println "        update ${tableName} set ${tableName}.${isDeleteProperties[0]} = 1 where ${tableName}.${it.right} = #{${foreignKey}}"
+                out.println "        update ${tableName} set ${tableName}.${isDeleteProperties[0]} = ${isDeletePropertieValue} where ${tableName}.${it.right} = #{${foreignKey}}"
                 out.println "    </update>"
                 out.println ""
             }
@@ -164,7 +165,7 @@ def baseXml(out, tableName, className, fields) {
         out.println ""
     } else {
         out.println "    <update id='deleteByQuery' parameterType='java.util.Map'>"
-        out.println "        update ${tableName} set ${tableName}.${isDeleteProperties[0]} = 1"
+        out.println "        update ${tableName} set ${tableName}.${isDeleteProperties[0]} = ${isDeletePropertieValue}"
         out.println "        <where>"
         out.println "            <include refid='query_filter'/>"
         out.println "        </where>"
@@ -226,7 +227,7 @@ def baseXml(out, tableName, className, fields) {
     out.println "    <sql id='query_filter'>"
     fields.each() {
         if (propertiesContainField(it.right, isDeleteProperties)) {
-            out.println "        and ${tableName}.${it.right} != 1"
+            out.println "        and ${tableName}.${it.right} != ${isDeletePropertieValue}"
         } else {
             out.println "        <if test='${it.left} != null'>and ${tableName}.${it.right} = #{${it.left}}</if>"
         }

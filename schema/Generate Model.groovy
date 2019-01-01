@@ -16,7 +16,7 @@ import java.time.LocalTime
 
 packageName = ""
 basePackageName = ""
-commonProperties = ["id", "gmt_create", "gmt_modified", "is_delete", "operater", "operater_id"] as String[]
+commonProperties = ["id", "gmt_create", "gmt_modified", "is_delete", "operator", "operator_id"] as String[]
 typeMapping = [
         (~/(?i)bigint/)                   : "Long",
         (~/(?i)int/)                      : "Integer",
@@ -98,7 +98,7 @@ def model(out, className, tableComment, fields) {
                 out.println "  */"
             }
             if (it.commoent != "") {
-                out.println "  @ApiModelProperty(value = \"${it.comment}【${it.colDataType}】\", dataType = \"${it.dataType}\", example = \"${it.example}\", hidden = true)"
+                out.println "  @ApiModelProperty(value = \"${it.comment}【${it.colDataType}】\", dataType = \"${it.dataType}\", hidden = true)"
             }
             if (it.annos != "") out.println "  ${it.annos}"
             out.println "  private ${it.type} ${it.name};"
@@ -110,7 +110,7 @@ def model(out, className, tableComment, fields) {
                 out.println "  */"
             }
             if (it.commoent != "") {
-                out.println "  @ApiModelProperty(value = \"${it.comment}【${it.colDataType}】\", dataType = \"${it.dataType}\", example = \"${it.example}\")"
+                out.println "  @ApiModelProperty(value = \"${it.comment}【${it.colDataType}】\", dataType = \"${it.dataType}\")"
             }
             if (it.annos != "") out.println "  ${it.annos}"
             out.println "  private ${it.type} ${it.name};"
