@@ -33,7 +33,7 @@ def generate(table, dir) {
     if (index != -1) {
         packageName = dir.toString().substring(index + 15).replaceAll(sepa, ".")
     }
-    int index_last = packageName.lastIndexOf(".")
+    index_last = packageName.lastIndexOf(".")
     if (index_last != -1) {
         basePackageName = packageName.toString().substring(0, index_last)
     }
@@ -42,18 +42,13 @@ def generate(table, dir) {
     def tableComment = table.getComment()
     def fields = calcFields(table)
     def mapperDir = dir.toString() + sepa + "mapper" + sepa
-    def baseMapperDir = dir.toString() + sepa + "mapper" + sepa + "base" + sepa
-    def baseMapperFile = new File(baseMapperDir)
-    baseMapperFile.mkdirs()
-    new File(baseMapperDir, className + "BaseMapper.java").withPrintWriter { out -> baseMapper(out, className, paramName, tableComment, fields) }
-    def mapperFile = new File(mapperDir, className + "Mapper.java")
-    if (!mapperFile.exists()) {
-        mapperFile.withPrintWriter { out -> mapper(out, className, fields) }
-    }
+    def mapperFile = new File(mapperDir)
+    mapperFile.mkdirs()
+    new File(mapperDir, className + "Mapper.java").withPrintWriter { out -> mapper(out, className, paramName, tableComment, fields) }
 }
 
-def baseMapper(out, className, paramName, tableComment, fields) {
-    out.println "package ${packageName}.mapper.base;"
+def mapper(out, className, paramName, tableComment, fields) {
+    out.println "package ${packageName}.mapper;"
     out.println ""
     out.println "import ${packageName}.model.${className}Model;"
     out.println "import org.apache.ibatis.annotations.Param;"
@@ -61,7 +56,7 @@ def baseMapper(out, className, paramName, tableComment, fields) {
     out.println "import java.util.List;"
     out.println "import java.util.Map;"
     out.println ""
-    out.println "public interface ${className}BaseMapper {"
+    out.println "public interface ${className}Mapper {"
     out.println ""
     out.println "    /**"
     out.println "     * 新增${tableComment}"
@@ -97,18 +92,18 @@ def baseMapper(out, className, paramName, tableComment, fields) {
     out.println "    /**"
     out.println "     * 通过条件删除"
     out.println "     *"
-    out.println "     * @param param"
+    out.println "     * @param ${paramName}Model"
     out.println "     * @return"
     out.println "     */"
-    out.println "    Integer deleteByQuery(Map<String, Object> param);"
+    out.println "    Integer deleteByQuery(${className}Model ${paramName}Model);"
     out.println ""
     out.println "    /**"
     out.println "     * 更新${tableComment}"
     out.println "     *"
-    out.println "     * @param param"
+    out.println "     * @param ${paramName}Model"
     out.println "     * @return"
     out.println "     */"
-    out.println "    Integer update(Map<String, Object> param);"
+    out.println "    Integer update(${className}Model ${paramName}Model);"
     out.println ""
     out.println "    /**"
     out.println "     * 通过主键查询"
@@ -136,46 +131,26 @@ def baseMapper(out, className, paramName, tableComment, fields) {
     out.println "    /**"
     out.println "     * 通过条件查询One"
     out.println "     *"
-    out.println "     * @param param"
+    out.println "     * @param ${paramName}Model"
     out.println "     * @return"
     out.println "     */"
-    out.println "    ${className}Model selectOneByQuery(Map<String, Object> param);"
+    out.println "    ${className}Model selectOneByQuery(${className}Model ${paramName}Model);"
     out.println ""
     out.println "    /**"
     out.println "     * 通过条件查询"
     out.println "     *"
-    out.println "     * @param param"
+    out.println "     * @param ${paramName}Model"
     out.println "     * @return"
     out.println "     */"
-    out.println "    List<${className}Model> selectByQuery(Map<String, Object> param);"
-    out.println ""
-    out.println "    /**"
-    out.println "     * 通过条件获取下拉项"
-    out.println "     *"
-    out.println "     * @param param"
-    out.println "     * @return"
-    out.println "     */"
-    out.println "    List<${basePackageName}.core.common.SelectBox> getSelectBoxByQuery(Map<String, Object> param);"
+    out.println "    List<${className}Model> selectByQuery(${className}Model ${paramName}Model);"
     out.println ""
     out.println "    /**"
     out.println "     * 通过条件查询条数"
     out.println "     *"
-    out.println "     * @param param"
+    out.println "     * @param ${paramName}Model"
     out.println "     * @return"
     out.println "     */"
-    out.println "    Integer count(Map<String, Object> param);"
-    out.println ""
-    out.println "}"
-}
-
-def mapper(out, className, fields) {
-    out.println "package ${packageName}.mapper;"
-    out.println ""
-    out.println "import ${packageName}.mapper.base.${className}BaseMapper;"
-    out.println "import org.apache.ibatis.annotations.Mapper;"
-    out.println ""
-    out.println "@Mapper"
-    out.println "public interface ${className}Mapper extends ${className}BaseMapper {"
+    out.println "    Integer count(${className}Model ${paramName}Model);"
     out.println ""
     out.println "}"
 }

@@ -16,8 +16,8 @@ import java.time.LocalTime
 
 packageName = ""
 basePackageName = ""
-commonProperties = ["id", "gmt_create", "gmt_modified", "is_delete", "operator", "operator_id"] as String[]
-typeMapping = [
+commonProperties = ["id", "gmt_create", "gmt_modified"] as String[]
+javaTypeMapping = [
         (~/(?i)bigint/)                   : "Long",
         (~/(?i)int/)                      : "Integer",
         (~/(?i)float|double|decimal|real/): "Double",
@@ -27,24 +27,14 @@ typeMapping = [
         (~/(?i)/)                         : "String"
 ]
 
-dataTypeMapping = [
-        (~/(?i)bigint/)                   : "integer",
-        (~/(?i)int/)                      : "integer",
-        (~/(?i)float|double|decimal|real/): "number",
-        (~/(?i)datetime|timestamp/)       : "string",
-        (~/(?i)date/)                     : "string",
-        (~/(?i)time/)                     : "string",
-        (~/(?i)/)                         : "string"
-]
-
-exampleMapping = [
-        (~/(?i)bigint/)                   : "1",
-        (~/(?i)int/)                      : "1",
-        (~/(?i)float|double|decimal|real/): "1.00",
-        (~/(?i)datetime|timestamp/)       : LocalDateTime.now(),
-        (~/(?i)date/)                     : LocalDate.now(),
-        (~/(?i)time/)                     : LocalTime.now(),
-        (~/(?i)/)                         : "占位符"
+parameterTypeMapping = [
+        (~/(?i)bigint/)                   : "java.lang.Long",
+        (~/(?i)int/)                      : "java.lang.Integer",
+        (~/(?i)float|double|decimal|real/): "java.lang.Double",
+        (~/(?i)datetime|timestamp/)       : "java.time.LocalDateTime",
+        (~/(?i)date/)                     : "java.time.LocalDate",
+        (~/(?i)time/)                     : "java.time.LocalTime",
+        (~/(?i)/)                         : "java.lang.String"
 ]
 
 sepa = java.io.File.separator
@@ -74,12 +64,13 @@ def generate(table, dir) {
 def model(out, className, tableComment, fields) {
     out.println "package ${packageName}.model;"
     out.println ""
+    out.println "import com.fasterxml.jackson.annotation.JsonFormat;"
     out.println "import io.swagger.annotations.ApiModel;"
     out.println "import io.swagger.annotations.ApiModelProperty;"
+    out.println "import org.springframework.format.annotation.DateTimeFormat;"
     out.println "import lombok.*;"
     out.println ""
     out.println "import java.io.Serializable;"
-    out.println "import java.time.*;"
     out.println ""
     out.println "@Data"
     out.println "@Builder"
@@ -88,32 +79,44 @@ def model(out, className, tableComment, fields) {
     out.println "@ApiModel(value = \"${className}Model\", description = \"${tableComment}\")"
     out.println "public class ${className}Model implements Serializable {"
     out.println ""
-    out.println "  public static final long serialVersionUID = 1L;"
+    out.println "    public static final long serialVersionUID = 1L;"
     out.println ""
     fields.each() {
-        if (propertiesContainField(it.right, commonProperties)) {
+        if (propertiesContainField(it, commonProperties)) {
             if (it.commoent != "") {
-                out.println " /**"
-                out.println "  * ${it.comment}【${it.colDataType}】"
-                out.println "  */"
+                out.println "    /**"
+                out.println "     * ${it.comment}【${it.colDataType}】"
+                out.println "     */"
             }
             if (it.commoent != "") {
-                out.println "  @ApiModelProperty(value = \"${it.comment}【${it.colDataType}】\", dataType = \"${it.dataType}\", hidden = true)"
+                out.println "    @ApiModelProperty(value = \"${it.comment}\", dataType = \"${it.javaType}\", hidden = true)"
             }
-            if (it.annos != "") out.println "  ${it.annos}"
-            out.println "  private ${it.type} ${it.name};"
+            if (it.annos != "") {
+                out.println "    ${it.annos}"
+            }
+            if (it.javaType.contains("java.time.")) {
+                out.println "    @DateTimeFormat(pattern = \"yyyy-MM-dd HH:mm:ss\")"
+                out.println "    @JsonFormat(pattern = \"yyyy-MM-dd HH:mm:ss\")"
+            }
+            out.println "    private ${it.javaType} ${it.javaName};"
             out.println ""
         } else {
             if (it.commoent != "") {
-                out.println " /**"
-                out.println "  * ${it.comment}【${it.colDataType}】"
-                out.println "  */"
+                out.println "    /**"
+                out.println "     * ${it.comment}【${it.colDataType}】"
+                out.println "     */"
             }
             if (it.commoent != "") {
-                out.println "  @ApiModelProperty(value = \"${it.comment}【${it.colDataType}】\", dataType = \"${it.dataType}\")"
+                out.println "    @ApiModelProperty(value = \"${it.comment}\", dataType = \"${it.javaType}\")"
             }
-            if (it.annos != "") out.println "  ${it.annos}"
-            out.println "  private ${it.type} ${it.name};"
+            if (it.annos != "") {
+                out.println "    ${it.annos}"
+            }
+            if (it.javaType.contains("java.time.")) {
+                out.println "    @DateTimeFormat(pattern = \"yyyy-MM-dd HH:mm:ss\")"
+                out.println "    @JsonFormat(pattern = \"yyyy-MM-dd HH:mm:ss\")"
+            }
+            out.println "    private ${it.javaType} ${it.javaName};"
             out.println ""
         }
     }
@@ -121,50 +124,77 @@ def model(out, className, tableComment, fields) {
     out.println "}"
 }
 
-boolean fieldsContainPropertie(propertie, fields) {
-    def isExsit = false
-    fields.each() {
-        if (propertie == it.right) {
-            isExsit = true
+boolean fieldsContainProperties(properties, fields) {
+    def exist = false
+    properties.each() {
+        def property = it
+        fields.each() {
+            if (property == it.right) {
+                exist = true
+            }
         }
     }
-    isExsit
+    exist
 }
 
 boolean propertiesContainField(field, properties) {
-    def isExsit = false
+    def exist = false
     properties.each() {
-        if (field == it) {
-            isExsit = true
+        if (field.right == it) {
+            exist = true
         }
     }
-    isExsit
+    exist
 }
 
 def calcFields(table) {
     DasUtil.getColumns(table).reduce([]) { fields, col ->
         def spec = Case.LOWER.apply(col.getDataType().getSpecification())
-        def typeStr = typeMapping.find { p, t -> p.matcher(spec).find() }.value
-        def dataType = dataTypeMapping.find { p, t -> p.matcher(spec).find() }.value
-        def example = exampleMapping.find { p, t -> p.matcher(spec).find() }.value
+        def javaTypeStr = javaTypeMapping.find { p, t -> p.matcher(spec).find() }.value
+        def parameterTypeStr = parameterTypeMapping.find { p, t -> p.matcher(spec).find() }.value
         fields += [[
-                           left       : javaName(col.getName(), false),
-                           right      : col.getName(),
-                           name       : javaName(col.getName(), false),
-                           dataType   : dataType,
-                           colDataType: col.getDataType(),
-                           example    : example,
-                           type       : typeStr,
-                           comment    : col.getComment(),
-                           annos      : ""]]
+                           javaName     : javaName(col.getName(), false),
+                           colName      : col.getName(),
+                           parameterName: parameterName(col.getName(), true),
+                           dataType     : col.getDataType(),
+                           jdbcType     : col.getDataType(),
+                           javaType     : javaTypeStr,
+                           parameterType: parameterTypeStr,
+                           comment      : col.getComment(),
+                           annos        : ""]]
     }
 }
 
 def javaName(str, capitalize) {
+    String strTmp = str
+    if (strTmp.startsWith("is_")) {
+        str = str.replaceFirst("is_", "")
+    }
     def s = com.intellij.psi.codeStyle.NameUtil.splitNameIntoWords(str)
             .collect { Case.LOWER.apply(it).capitalize() }
             .join("")
             .replaceAll(/[^\p{javaJavaIdentifierPart}[_]]/, "_")
     capitalize || s.length() == 1 ? s : Case.LOWER.apply(s[0]) + s[1..-1]
 }
+
+def parameterName(str, capitalize) {
+    String strTmp = str
+    if (strTmp.startsWith("is_")) {
+        str = str.replaceFirst("is_", "")
+    }
+    def s = com.intellij.psi.codeStyle.NameUtil.splitNameIntoWords(str)
+            .collect { Case.LOWER.apply(it).capitalize() }
+            .join("")
+            .replaceAll(/[^\p{javaJavaIdentifierPart}[_]]/, "_")
+    capitalize || s.length() == 1 ? s : Case.LOWER.apply(s[0]) + s[1..-1]
+}
+
+def tableName(str, capitalize) {
+    def s = com.intellij.psi.codeStyle.NameUtil.splitNameIntoWords(str)
+            .collect { Case.LOWER.apply(it).capitalize() }
+            .join("")
+            .replaceAll(/[^\p{javaJavaIdentifierPart}[_]]/, "_")
+    capitalize || s.length() == 1 ? s : Case.LOWER.apply(s[0]) + s[1..-1]
+}
+
 
