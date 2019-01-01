@@ -12,7 +12,13 @@ import com.intellij.database.util.DasUtil
 
 packageName = ""
 basePackageName = ""
-typeMapping = [
+idProperties = ["id"] as String[]
+gmtCreate = ["gmt_create"] as String[]
+gmtModified = ["gmt_modified"] as String[]
+isDeleteProperties = ["is_delete"] as String[]
+delete = 1
+commonProperties = ["id", "gmt_create", "gmt_modified"] as String[]
+javaTypeMapping = [
         (~/(?i)bigint/)                   : "Long",
         (~/(?i)int/)                      : "Integer",
         (~/(?i)float|double|decimal|real/): "Double",
@@ -20,6 +26,16 @@ typeMapping = [
         (~/(?i)date/)                     : "java.time.LocalDate",
         (~/(?i)time/)                     : "java.time.LocalTime",
         (~/(?i)/)                         : "String"
+]
+
+parameterTypeMapping = [
+        (~/(?i)bigint/)                   : "java.lang.Long",
+        (~/(?i)int/)                      : "java.lang.Integer",
+        (~/(?i)float|double|decimal|real/): "java.lang.Double",
+        (~/(?i)datetime|timestamp/)       : "java.time.LocalDateTime",
+        (~/(?i)date/)                     : "java.time.LocalDate",
+        (~/(?i)time/)                     : "java.time.LocalTime",
+        (~/(?i)/)                         : "java.lang.String"
 ]
 
 sepa = java.io.File.separator
@@ -33,7 +49,7 @@ def generate(table, dir) {
     if (index != -1) {
         packageName = dir.toString().substring(index + 15).replaceAll(sepa, ".")
     }
-    index_last = packageName.lastIndexOf(".")
+    int index_last = packageName.lastIndexOf(".")
     if (index_last != -1) {
         basePackageName = packageName.toString().substring(0, index_last)
     }
@@ -74,10 +90,10 @@ def mapper(out, className, paramName, tableComment, fields) {
     out.println "     */"
     out.println "    Integer deleteByPrimaryKey(@Param(\"id\") Long id);"
     fields.each() {
-        String str = it.right
+        String str = it.colName
         if (str.endsWith("_id")) {
-            def ForeignKey = javaName(it.right, true)
-            def foreignKey = javaName(it.right, false)
+            def ForeignKey = javaName(it.colName, true)
+            def foreignKey = javaName(it.colName, false)
             out.println ""
             out.println "    /**"
             out.println "     * 通过${foreignKey}删除"
@@ -113,10 +129,10 @@ def mapper(out, className, paramName, tableComment, fields) {
     out.println "     */"
     out.println "    ${className}Model selectByPrimaryKey(@Param(\"id\") Long id);"
     fields.each() {
-        String str = it.right
+        String str = it.colName
         if (str.endsWith("_id")) {
-            def ForeignKey = javaName(it.right, true)
-            def foreignKey = javaName(it.right, false)
+            def ForeignKey = javaName(it.colName, true)
+            def foreignKey = javaName(it.colName, false)
             out.println ""
             out.println "    /**"
             out.println "     * 通过${foreignKey}查询"
@@ -155,22 +171,72 @@ def mapper(out, className, paramName, tableComment, fields) {
     out.println "}"
 }
 
+boolean fieldsContainProperties(properties, fields) {
+    def exist = false
+    properties.each() {
+        def property = it
+        fields.each() {
+            if (property == it.right) {
+                exist = true
+            }
+        }
+    }
+    exist
+}
+
+boolean propertiesContainField(field, properties) {
+    def exist = false
+    properties.each() {
+        if (field.right == it) {
+            exist = true
+        }
+    }
+    exist
+}
+
 def calcFields(table) {
     DasUtil.getColumns(table).reduce([]) { fields, col ->
         def spec = Case.LOWER.apply(col.getDataType().getSpecification())
-        def typeStr = typeMapping.find { p, t -> p.matcher(spec).find() }.value
+        def javaTypeStr = javaTypeMapping.find { p, t -> p.matcher(spec).find() }.value
+        def parameterTypeStr = parameterTypeMapping.find { p, t -> p.matcher(spec).find() }.value
         fields += [[
-                           left    : javaName(col.getName(), false),
-                           right   : col.getName(),
-                           name    : javaName(col.getName(), false),
-                           dataType: col.getDataType(),
-                           type    : typeStr,
-                           comment : col.getComment(),
-                           annos   : ""]]
+                           javaName     : javaName(col.getName(), false),
+                           colName      : col.getName(),
+                           parameterName: parameterName(col.getName(), true),
+                           dataType     : col.getDataType(),
+                           jdbcType     : col.getDataType(),
+                           javaType     : javaTypeStr,
+                           parameterType: parameterTypeStr,
+                           comment      : col.getComment(),
+                           annos        : ""]]
     }
 }
 
 def javaName(str, capitalize) {
+    String strTmp = str
+    if (strTmp.startsWith("is_")) {
+        str = str.replaceFirst("is_", "")
+    }
+    def s = com.intellij.psi.codeStyle.NameUtil.splitNameIntoWords(str)
+            .collect { Case.LOWER.apply(it).capitalize() }
+            .join("")
+            .replaceAll(/[^\p{javaJavaIdentifierPart}[_]]/, "_")
+    capitalize || s.length() == 1 ? s : Case.LOWER.apply(s[0]) + s[1..-1]
+}
+
+def parameterName(str, capitalize) {
+    String strTmp = str
+    if (strTmp.startsWith("is_")) {
+        str = str.replaceFirst("is_", "")
+    }
+    def s = com.intellij.psi.codeStyle.NameUtil.splitNameIntoWords(str)
+            .collect { Case.LOWER.apply(it).capitalize() }
+            .join("")
+            .replaceAll(/[^\p{javaJavaIdentifierPart}[_]]/, "_")
+    capitalize || s.length() == 1 ? s : Case.LOWER.apply(s[0]) + s[1..-1]
+}
+
+def tableName(str, capitalize) {
     def s = com.intellij.psi.codeStyle.NameUtil.splitNameIntoWords(str)
             .collect { Case.LOWER.apply(it).capitalize() }
             .join("")

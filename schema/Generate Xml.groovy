@@ -18,6 +18,7 @@ gmtCreate = ["gmt_create"] as String[]
 gmtModified = ["gmt_modified"] as String[]
 isDeleteProperties = ["is_delete"] as String[]
 delete = 1
+commonProperties = ["id", "gmt_create", "gmt_modified"] as String[]
 javaTypeMapping = [
         (~/(?i)bigint/)                   : "Long",
         (~/(?i)int/)                      : "Integer",
@@ -255,7 +256,7 @@ boolean fieldsContainProperties(properties, fields) {
     properties.each() {
         def property = it
         fields.each() {
-            if (property == it.colName) {
+            if (property == it.right) {
                 exist = true
             }
         }
@@ -266,7 +267,7 @@ boolean fieldsContainProperties(properties, fields) {
 boolean propertiesContainField(field, properties) {
     def exist = false
     properties.each() {
-        if (field.colName == it) {
+        if (field.right == it) {
             exist = true
         }
     }

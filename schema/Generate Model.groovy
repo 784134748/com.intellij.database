@@ -16,6 +16,11 @@ import java.time.LocalTime
 
 packageName = ""
 basePackageName = ""
+idProperties = ["id"] as String[]
+gmtCreate = ["gmt_create"] as String[]
+gmtModified = ["gmt_modified"] as String[]
+isDeleteProperties = ["is_delete"] as String[]
+delete = 1
 commonProperties = ["id", "gmt_create", "gmt_modified"] as String[]
 javaTypeMapping = [
         (~/(?i)bigint/)                   : "Long",
@@ -196,5 +201,6 @@ def tableName(str, capitalize) {
             .replaceAll(/[^\p{javaJavaIdentifierPart}[_]]/, "_")
     capitalize || s.length() == 1 ? s : Case.LOWER.apply(s[0]) + s[1..-1]
 }
+
 
 
