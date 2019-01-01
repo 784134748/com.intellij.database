@@ -58,16 +58,21 @@ def generate(table, dir) {
     def fields = calcFields(table)
     def tableName = table.getName()
     def xmlDir = dir.toString().substring(0, index + 10) + sepa + "resources" + sepa + "mapper" + sepa
-    def xmlFile = new File(xmlDir)
-    xmlFile.mkdirs()
-    new File(xmlDir, className + "Mapper.xml").withPrintWriter { out -> xml(out, tableName, className, fields) }
+    def baseXmlDir = dir.toString().substring(0, index + 10) + sepa + "resources" + sepa + "mapper" + sepa + "base" + sepa
+    def baseXmlFile = new File(baseXmlDir)
+    baseXmlFile.mkdirs()
+    new File(baseXmlDir, className + "BaseMapper.xml").withPrintWriter { out -> baseXml(out, tableName, className, fields) }
+    def xmlFile = new File(xmlDir, className + "Mapper.xml")
+    if (!xmlFile.exists()) {
+        xmlFile.withPrintWriter { out -> xml(out, tableName, className, fields) }
+    }
 }
 
-def xml(out, tableName, className, fields) {
+def baseXml(out, tableName, className, fields) {
     int index = 0
     out.println "<?xml version='1.0' encoding='UTF-8' ?>"
     out.println "<!DOCTYPE mapper PUBLIC '-//mybatis.org//DTD Mapper 3.0//EN' 'http://mybatis.org/dtd/mybatis-3-mapper.dtd' >"
-    out.println "<mapper namespace='${packageName}.mapper.${className}Mapper'>"
+    out.println "<mapper namespace='${packageName}.mapper.base.${className}BaseMapper'>"
     out.println ""
     out.println "    <resultMap id='BaseResultMap' type='${packageName}.model.${className}Model'>"
     out.println "        <constructor>"
@@ -247,6 +252,14 @@ def xml(out, tableName, className, fields) {
         }
     }
     out.println "    </sql>"
+    out.println ""
+    out.println "</mapper>"
+}
+
+def xml(out, tableName, className, fields) {
+    out.println "<?xml version='1.0' encoding='UTF-8' ?>"
+    out.println "<!DOCTYPE mapper PUBLIC '-//mybatis.org//DTD Mapper 3.0//EN' 'http://mybatis.org/dtd/mybatis-3-mapper.dtd' >"
+    out.println "<mapper namespace='${packageName}.mapper.${className}Mapper'>"
     out.println ""
     out.println "</mapper>"
 }

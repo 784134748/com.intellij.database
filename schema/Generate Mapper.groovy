@@ -58,21 +58,25 @@ def generate(table, dir) {
     def tableComment = table.getComment()
     def fields = calcFields(table)
     def mapperDir = dir.toString() + sepa + "mapper" + sepa
-    def mapperFile = new File(mapperDir)
-    mapperFile.mkdirs()
-    new File(mapperDir, className + "Mapper.java").withPrintWriter { out -> mapper(out, className, paramName, tableComment, fields) }
+    def baseMapperDir = dir.toString() + sepa + "mapper" + sepa + "base" + sepa
+    def baseMapperFile = new File(baseMapperDir)
+    baseMapperFile.mkdirs()
+    new File(baseMapperDir, className + "BaseMapper.java").withPrintWriter { out -> baseMapper(out, className, paramName, tableComment, fields) }
+    def mapperFile = new File(mapperDir, className + "Mapper.java")
+    if (!mapperFile.exists()) {
+        mapperFile.withPrintWriter { out -> mapper(out, className, fields) }
+    }
 }
 
-def mapper(out, className, paramName, tableComment, fields) {
-    out.println "package ${packageName}.mapper;"
+def baseMapper(out, className, paramName, tableComment, fields) {
+    out.println "package ${packageName}.mapper.base;"
     out.println ""
     out.println "import ${packageName}.model.${className}Model;"
     out.println "import org.apache.ibatis.annotations.Param;"
     out.println ""
     out.println "import java.util.List;"
-    out.println "import java.util.Map;"
     out.println ""
-    out.println "public interface ${className}Mapper {"
+    out.println "public interface ${className}BaseMapper {"
     out.println ""
     out.println "    /**"
     out.println "     * 新增${tableComment}"
@@ -167,6 +171,18 @@ def mapper(out, className, paramName, tableComment, fields) {
     out.println "     * @return"
     out.println "     */"
     out.println "    Integer count(${className}Model ${paramName}Model);"
+    out.println ""
+    out.println "}"
+}
+
+def mapper(out, className, fields) {
+    out.println "package ${packageName}.mapper;"
+    out.println ""
+    out.println "import ${packageName}.mapper.base.${className}BaseMapper;"
+    out.println "import org.apache.ibatis.annotations.Mapper;"
+    out.println ""
+    out.println "@Mapper"
+    out.println "public interface ${className}Mapper extends ${className}BaseMapper {"
     out.println ""
     out.println "}"
 }

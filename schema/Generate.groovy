@@ -17,12 +17,13 @@ import java.time.LocalTime
 
 packageName = ""
 basePackageName = ""
+idProperties = ["id"] as String[]
 gmtCreate = ["gmt_create"] as String[]
 gmtModified = ["gmt_modified"] as String[]
 isDeleteProperties = ["is_delete"] as String[]
-isDeletePropertieValue = 1
-commonProperties = ["id", "gmt_create", "gmt_modified", "is_delete", "operator", "operator_id"] as String[]
-typeMapping = [
+delete = 1
+commonProperties = ["id", "gmt_create", "gmt_modified"] as String[]
+javaTypeMapping = [
         (~/(?i)bigint/)                   : "Long",
         (~/(?i)int/)                      : "Integer",
         (~/(?i)float|double|decimal|real/): "Double",
@@ -32,25 +33,14 @@ typeMapping = [
         (~/(?i)/)                         : "String"
 ]
 
-
-dataTypeMapping = [
-        (~/(?i)bigint/)                   : "integer",
-        (~/(?i)int/)                      : "integer",
-        (~/(?i)float|double|decimal|real/): "number",
-        (~/(?i)datetime|timestamp/)       : "string",
-        (~/(?i)date/)                     : "string",
-        (~/(?i)time/)                     : "string",
-        (~/(?i)/)                         : "string"
-]
-
-exampleMapping = [
-        (~/(?i)bigint/)                   : "1",
-        (~/(?i)int/)                      : "1",
-        (~/(?i)float|double|decimal|real/): "1.00",
-        (~/(?i)datetime|timestamp/)       : "2018-09-10 10:30:00",
-        (~/(?i)date/)                     : "2018-09-10 10:30:00",
-        (~/(?i)time/)                     : "2018-09-10 10:30:00",
-        (~/(?i)/)                         : ""
+parameterTypeMapping = [
+        (~/(?i)bigint/)                   : "java.lang.Long",
+        (~/(?i)int/)                      : "java.lang.Integer",
+        (~/(?i)float|double|decimal|real/): "java.lang.Double",
+        (~/(?i)datetime|timestamp/)       : "java.time.LocalDateTime",
+        (~/(?i)date/)                     : "java.time.LocalDate",
+        (~/(?i)time/)                     : "java.time.LocalTime",
+        (~/(?i)/)                         : "java.lang.String"
 ]
 
 sepa = java.io.File.separator
@@ -109,12 +99,13 @@ def generate(table, dir) {
 def model(out, className, tableComment, fields) {
     out.println "package ${packageName}.model;"
     out.println ""
+    out.println "import com.fasterxml.jackson.annotation.JsonFormat;"
     out.println "import io.swagger.annotations.ApiModel;"
     out.println "import io.swagger.annotations.ApiModelProperty;"
+    out.println "import org.springframework.format.annotation.DateTimeFormat;"
     out.println "import lombok.*;"
     out.println ""
     out.println "import java.io.Serializable;"
-    out.println "import java.time.*;"
     out.println ""
     out.println "@Data"
     out.println "@Builder"
@@ -123,32 +114,44 @@ def model(out, className, tableComment, fields) {
     out.println "@ApiModel(value = \"${className}Model\", description = \"${tableComment}\")"
     out.println "public class ${className}Model implements Serializable {"
     out.println ""
-    out.println "  public static final long serialVersionUID = 1L;"
+    out.println "    public static final long serialVersionUID = 1L;"
     out.println ""
     fields.each() {
-        if (propertiesContainField(it.right, commonProperties)) {
+        if (propertiesContainField(it, commonProperties)) {
             if (it.commoent != "") {
-                out.println " /**"
-                out.println "  * ${it.comment}【${it.colDataType}】"
-                out.println "  */"
+                out.println "    /**"
+                out.println "     * ${it.comment}【${it.colDataType}】"
+                out.println "     */"
             }
             if (it.commoent != "") {
-                out.println "  @ApiModelProperty(value = \"${it.comment}\", dataType = \"${it.dataType}\", hidden = true)"
+                out.println "    @ApiModelProperty(value = \"${it.comment}\", dataType = \"${it.javaType}\", hidden = true)"
             }
-            if (it.annos != "") out.println "  ${it.annos}"
-            out.println "  private ${it.type} ${it.name};"
+            if (it.annos != "") {
+                out.println "    ${it.annos}"
+            }
+            if (it.javaType.contains("java.time.")) {
+                out.println "    @DateTimeFormat(pattern = \"yyyy-MM-dd HH:mm:ss\")"
+                out.println "    @JsonFormat(pattern = \"yyyy-MM-dd HH:mm:ss\")"
+            }
+            out.println "    private ${it.javaType} ${it.javaName};"
             out.println ""
         } else {
             if (it.commoent != "") {
-                out.println " /**"
-                out.println "  * ${it.comment}【${it.colDataType}】"
-                out.println "  */"
+                out.println "    /**"
+                out.println "     * ${it.comment}【${it.colDataType}】"
+                out.println "     */"
             }
             if (it.commoent != "") {
-                out.println "  @ApiModelProperty(value = \"${it.comment}\", dataType = \"${it.dataType}\")"
+                out.println "    @ApiModelProperty(value = \"${it.comment}\", dataType = \"${it.javaType}\")"
             }
-            if (it.annos != "") out.println "  ${it.annos}"
-            out.println "  private ${it.type} ${it.name};"
+            if (it.annos != "") {
+                out.println "    ${it.annos}"
+            }
+            if (it.javaType.contains("java.time.")) {
+                out.println "    @DateTimeFormat(pattern = \"yyyy-MM-dd HH:mm:ss\")"
+                out.println "    @JsonFormat(pattern = \"yyyy-MM-dd HH:mm:ss\")"
+            }
+            out.println "    private ${it.javaType} ${it.javaName};"
             out.println ""
         }
     }
@@ -163,7 +166,6 @@ def baseMapper(out, className, paramName, tableComment, fields) {
     out.println "import org.apache.ibatis.annotations.Param;"
     out.println ""
     out.println "import java.util.List;"
-    out.println "import java.util.Map;"
     out.println ""
     out.println "public interface ${className}BaseMapper {"
     out.println ""
@@ -183,10 +185,10 @@ def baseMapper(out, className, paramName, tableComment, fields) {
     out.println "     */"
     out.println "    Integer deleteByPrimaryKey(@Param(\"id\") Long id);"
     fields.each() {
-        String str = it.right
+        String str = it.colName
         if (str.endsWith("_id")) {
-            def ForeignKey = javaName(it.right, true)
-            def foreignKey = javaName(it.right, false)
+            def ForeignKey = javaName(it.colName, true)
+            def foreignKey = javaName(it.colName, false)
             out.println ""
             out.println "    /**"
             out.println "     * 通过${foreignKey}删除"
@@ -201,18 +203,18 @@ def baseMapper(out, className, paramName, tableComment, fields) {
     out.println "    /**"
     out.println "     * 通过条件删除"
     out.println "     *"
-    out.println "     * @param param"
+    out.println "     * @param ${paramName}Model"
     out.println "     * @return"
     out.println "     */"
-    out.println "    Integer deleteByQuery(Map<String, Object> param);"
+    out.println "    Integer deleteByQuery(${className}Model ${paramName}Model);"
     out.println ""
     out.println "    /**"
     out.println "     * 更新${tableComment}"
     out.println "     *"
-    out.println "     * @param param"
+    out.println "     * @param ${paramName}Model"
     out.println "     * @return"
     out.println "     */"
-    out.println "    Integer update(Map<String, Object> param);"
+    out.println "    Integer update(${className}Model ${paramName}Model);"
     out.println ""
     out.println "    /**"
     out.println "     * 通过主键查询"
@@ -222,10 +224,10 @@ def baseMapper(out, className, paramName, tableComment, fields) {
     out.println "     */"
     out.println "    ${className}Model selectByPrimaryKey(@Param(\"id\") Long id);"
     fields.each() {
-        String str = it.right
+        String str = it.colName
         if (str.endsWith("_id")) {
-            def ForeignKey = javaName(it.right, true)
-            def foreignKey = javaName(it.right, false)
+            def ForeignKey = javaName(it.colName, true)
+            def foreignKey = javaName(it.colName, false)
             out.println ""
             out.println "    /**"
             out.println "     * 通过${foreignKey}查询"
@@ -240,26 +242,26 @@ def baseMapper(out, className, paramName, tableComment, fields) {
     out.println "    /**"
     out.println "     * 通过条件查询One"
     out.println "     *"
-    out.println "     * @param param"
+    out.println "     * @param ${paramName}Model"
     out.println "     * @return"
     out.println "     */"
-    out.println "    ${className}Model selectOneByQuery(Map<String, Object> param);"
+    out.println "    ${className}Model selectOneByQuery(${className}Model ${paramName}Model);"
     out.println ""
     out.println "    /**"
     out.println "     * 通过条件查询"
     out.println "     *"
-    out.println "     * @param param"
+    out.println "     * @param ${paramName}Model"
     out.println "     * @return"
     out.println "     */"
-    out.println "    List<${className}Model> selectByQuery(Map<String, Object> param);"
+    out.println "    List<${className}Model> selectByQuery(${className}Model ${paramName}Model);"
     out.println ""
     out.println "    /**"
     out.println "     * 通过条件查询条数"
     out.println "     *"
-    out.println "     * @param param"
+    out.println "     * @param ${paramName}Model"
     out.println "     * @return"
     out.println "     */"
-    out.println "    Integer count(Map<String, Object> param);"
+    out.println "    Integer count(${className}Model ${paramName}Model);"
     out.println ""
     out.println "}"
 }
@@ -282,51 +284,58 @@ def baseXml(out, tableName, className, fields) {
     out.println "<!DOCTYPE mapper PUBLIC '-//mybatis.org//DTD Mapper 3.0//EN' 'http://mybatis.org/dtd/mybatis-3-mapper.dtd' >"
     out.println "<mapper namespace='${packageName}.mapper.base.${className}BaseMapper'>"
     out.println ""
+    out.println "    <resultMap id='BaseResultMap' type='${packageName}.model.${className}Model'>"
+    out.println "        <constructor>"
+    fields.each() {
+        if (propertiesContainField(it, idProperties)) {
+            out.println "            <idArg column='${it.colName}' javaType='${it.parameterType}'/>"
+        }else {
+            out.println "            <arg column='${it.colName}' javaType='${it.parameterType}'/>"
+        }
+    }
+    out.println "        </constructor>"
+    fields.each() {
+        out.println "        <result property='${it.javaName}' column='${it.colName}'/>"
+    }
+    out.println "    </resultMap>"
+    out.println ""
     out.println "    <sql id='Base_Column_List'>"
     out.print "    "
     fields.each() {
         if (index != 0) {
             out.print ", "
         }
-        out.print "${tableName}.${it.right}"
+        out.print "${tableName}.${it.colName}"
         index++
     }
     out.println ""
     out.println "    </sql>"
     out.println ""
-    out.println "    <select id='selectByPrimaryKey' resultType='${packageName}.model.${className}Model'"
-    out.println "            parameterType='java.util.Map'>"
+    out.println "    <select id='selectByPrimaryKey' resultMap='BaseResultMap'"
+    out.println "            parameterType='java.lang.Long'>"
     out.println "        select "
     out.println "        <include refid='Base_Column_List'/>"
     out.println "        from ${tableName} "
     out.println "        where ${tableName}.id = #{id}"
     out.println "    </select>"
     fields.each() {
-        String str = it.right
+        String str = it.colName
         if (str.endsWith("_id")) {
-            def ForeignKey = javaName(it.right, true)
-            def foreignKey = javaName(it.right, false)
+            def ForeignKey = javaName(it.colName, true)
+            def foreignKey = javaName(it.colName, false)
             out.println ""
-            out.println "    <select id='selectBy${ForeignKey}' resultType='${packageName}.model.${className}Model'"
+            out.println "    <select id='selectBy${ForeignKey}' resultMap='BaseResultMap'"
             out.println "            parameterType='java.lang.Long'>"
             out.println "        select "
             out.println "        <include refid='Base_Column_List'/>"
             out.println "        from ${tableName} "
-            out.println "        where ${tableName}.${it.right} = #{${foreignKey}}"
+            out.println "        where ${tableName}.${it.colName} = #{${foreignKey}}"
             out.println "    </select>"
         }
     }
     out.println ""
-    out.println "    <select id='getSelectBoxByQuery' resultType='${basePackageName}.core.common.SelectBox'"
-    out.println "            parameterType='java.util.Map'>"
-    out.println "        select ${tableName}.id as label, ${tableName}.id as value from ${tableName}"
-    out.println "        <where>"
-    out.println "            <include refid='query_filter'/>"
-    out.println "        </where>"
-    out.println "    </select>"
-    out.println ""
-    out.println "    <select id='selectOneByQuery' resultType='${packageName}.model.${className}Model'"
-    out.println "            parameterType='java.util.Map'>"
+    out.println "    <select id='selectOneByQuery' resultMap='BaseResultMap'"
+    out.println "            parameterType='${packageName}.model.${className}Model'>"
     out.println "        select "
     out.println "        <include refid='Base_Column_List'/>"
     out.println "        from ${tableName} "
@@ -336,8 +345,8 @@ def baseXml(out, tableName, className, fields) {
     out.println "        Limit 1"
     out.println "    </select>"
     out.println ""
-    out.println "    <select id='selectByQuery' resultType='${packageName}.model.${className}Model'"
-    out.println "            parameterType='java.util.Map'>"
+    out.println "    <select id='selectByQuery' resultMap='BaseResultMap'"
+    out.println "            parameterType='${packageName}.model.${className}Model'>"
     out.println "        select "
     out.println "        <include refid='Base_Column_List'/>"
     out.println "        from ${tableName} "
@@ -346,98 +355,98 @@ def baseXml(out, tableName, className, fields) {
     out.println "        </where>"
     out.println "    </select>"
     out.println ""
-    if (propertiesContainField(isDeleteProperties, fields)) {
+    if (fieldsContainProperties(isDeleteProperties, fields)) {
+        out.println "    <update id='deleteByPrimaryKey' parameterType='java.lang.Long'>"
+        out.println "        update ${tableName} set ${tableName}.${isDeleteProperties[0]} = ${delete} where ${tableName}.id = #{id}"
+        out.println "    </update>"
+        out.println ""
+    } else {
         out.println "    <delete id='deleteByPrimaryKey' parameterType='java.lang.Long'>"
         out.println "        delete from ${tableName} where ${tableName}.id = #{id}"
         out.println "    </delete>"
         out.println ""
-    } else {
-        out.println "    <update id='deleteByPrimaryKey' parameterType='java.lang.Long'>"
-        out.println "        update ${tableName} set ${tableName}.${isDeleteProperties[0]} = ${isDeletePropertieValue} where ${tableName}.id = #{id}"
-        out.println "    </update>"
-        out.println ""
     }
     fields.each() {
-        String str = it.right
-        if (str.endsWith("_id")) {
-            def ForeignKey = javaName(it.right, true)
-            def foreignKey = javaName(it.right, false)
-            if (propertiesContainField(isDeleteProperties, fields)) {
-                out.println "    <delete id='deleteByPrimaryKey' parameterType='java.lang.Long'>"
-                out.println "        delete from ${tableName} where ${tableName}.${it.right} = #{${foreignKey}}"
-                out.println "    </delete>"
+        String str = it.colName
+        if (str.endsWith("_id") && str != "target_id") {
+            def ForeignKey = javaName(it.colName, true)
+            def foreignKey = javaName(it.colName, false)
+            if (fieldsContainProperties(isDeleteProperties, fields)) {
+                out.println "    <update id='deleteBy${ForeignKey}' parameterType='java.lang.Long'>"
+                out.println "        update ${tableName} set ${tableName}.${isDeleteProperties[0]} = ${delete} where ${tableName}.${it.colName} = #{${foreignKey}}"
+                out.println "    </update>"
                 out.println ""
             } else {
-                out.println "    <update id='deleteBy${ForeignKey}' parameterType='java.lang.Long'>"
-                out.println "        update ${tableName} set ${tableName}.${isDeleteProperties[0]} = ${isDeletePropertieValue} where ${tableName}.${it.right} = #{${foreignKey}}"
-                out.println "    </update>"
+                out.println "    <delete id='deleteBy${ForeignKey}' parameterType='java.lang.Long'>"
+                out.println "        delete from ${tableName} where ${tableName}.${it.colName} = #{${foreignKey}}"
+                out.println "    </delete>"
                 out.println ""
             }
         }
     }
-    if (propertiesContainField(isDeleteProperties, fields)) {
-        out.println "    <select id='deleteByQuery' parameterType='java.util.Map'>"
+    if (fieldsContainProperties(isDeleteProperties, fields)) {
+        out.println "    <update id='deleteByQuery' parameterType='${packageName}.model.${className}Model'>"
+        out.println "        update ${tableName} set ${tableName}.${isDeleteProperties[0]} = ${delete}"
+        out.println "        <where>"
+        out.println "            <include refid='query_filter'/>"
+        out.println "        </where>"
+        out.println "    </update>"
+        out.println ""
+    } else {
+        out.println "    <delete id='deleteByQuery' parameterType='${packageName}.model.${className}Model'>"
         out.println "        delete from ${tableName}"
         out.println "        <where>"
         out.println "            <include refid='query_filter'/>"
         out.println "        </where>"
         out.println "    </delete>"
         out.println ""
-    } else {
-        out.println "    <update id='deleteByQuery' parameterType='java.util.Map'>"
-        out.println "        update ${tableName} set ${tableName}.${isDeleteProperties[0]} = ${isDeletePropertieValue}"
-        out.println "        <where>"
-        out.println "            <include refid='query_filter'/>"
-        out.println "        </where>"
-        out.println "    </update>"
-        out.println ""
     }
-    out.println "    <select id='count' resultType='java.lang.Integer' parameterType='java.util.Map'>"
+    out.println "    <select id='count' resultType='java.lang.Integer' parameterType='${packageName}.model.${className}Model'>"
     out.println "        select count(*) from ${tableName}"
     out.println "        <where>"
     out.println "            <include refid='query_filter'/>"
     out.println "        </where>"
     out.println "    </select>"
     out.println ""
-    out.println "    <insert id='insert' parameterType='java.util.Map' useGeneratedKeys='true' keyProperty='id'>"
+    out.println "    <insert id='insert' parameterType='${packageName}.model.${className}Model' useGeneratedKeys='true' keyProperty='id'>"
     out.println "        insert into ${tableName}"
     out.println "        <trim prefix='(' suffix=')' suffixOverrides=','>"
     fields.each() {
-        if (propertiesContainField(it.right, gmtCreate)) {
-            out.println "            ${tableName}.${it.right},"
-        } else if (propertiesContainField(it.right, gmtModified)) {
-            out.println "            ${tableName}.${it.right},"
-        } else if (propertiesContainField(it.right, isDeleteProperties)) {
-            out.println "            ${tableName}.${it.right},"
+        if (propertiesContainField(it, gmtCreate)) {
+            out.println "            ${tableName}.${it.colName},"
+        } else if (propertiesContainField(it, gmtModified)) {
+            out.println "            ${tableName}.${it.colName},"
+        } else if (propertiesContainField(it, isDeleteProperties)) {
+            out.println "            ${tableName}.${it.colName},"
         } else {
-            out.println "            <if test='${it.left} != null'>${tableName}.${it.right},</if>"
+            out.println "            <if test='${it.javaName} != null'>${tableName}.${it.colName},</if>"
         }
     }
     out.println "        </trim>"
     out.println "        <trim prefix='values (' suffix=')' suffixOverrides=','>"
     fields.each() {
-        if (propertiesContainField(it.right, gmtCreate)) {
+        if (propertiesContainField(it, gmtCreate)) {
             out.println "            now(),"
-        } else if (propertiesContainField(it.right, gmtModified)) {
+        } else if (propertiesContainField(it, gmtModified)) {
             out.println "            now(),"
-        } else if (propertiesContainField(it.right, isDeleteProperties)) {
+        } else if (propertiesContainField(it, isDeleteProperties)) {
             out.println "            0,"
         } else {
-            out.println "            <if test='${it.left} != null'>#{${it.left}},</if>"
+            out.println "            <if test='${it.javaName} != null'>#{${it.javaName}},</if>"
         }
     }
     out.println "        </trim>"
     out.println "    </insert>"
     out.println ""
-    out.println "    <update id='update' parameterType='java.util.Map'>"
+    out.println "    <update id='update' parameterType='${packageName}.model.${className}Model'>"
     out.println "        update ${tableName}"
     out.println "        <set>"
     fields.each() {
-        if (propertiesContainField(it.right, gmtCreate)) {
-        } else if (propertiesContainField(it.right, gmtModified)) {
-            out.println "            ${tableName}.${it.right} = now(),"
+        if (propertiesContainField(it, gmtCreate)) {
+        } else if (propertiesContainField(it, gmtModified)) {
+            out.println "            ${tableName}.${it.colName} = now(),"
         } else {
-            out.println "            <if test='${it.left} != null'>${tableName}.${it.right} = #{${it.left}},</if>"
+            out.println "            <if test='${it.javaName} != null'>${tableName}.${it.colName} = #{${it.javaName}},</if>"
         }
     }
     out.println "        </set>"
@@ -446,10 +455,10 @@ def baseXml(out, tableName, className, fields) {
     out.println ""
     out.println "    <sql id='query_filter'>"
     fields.each() {
-        if (propertiesContainField(it.right, isDeleteProperties)) {
-            out.println "        and ${tableName}.${it.right} != ${isDeletePropertieValue}"
+        if (propertiesContainField(it, isDeleteProperties)) {
+            out.println "        and ${tableName}.${it.colName} != ${delete}"
         } else {
-            out.println "        <if test='${it.left} != null'>and ${tableName}.${it.right} = #{${it.left}}</if>"
+            out.println "        <if test='${it.javaName} != null'>and ${tableName}.${it.colName} = #{${it.javaName}}</if>"
         }
     }
     out.println "    </sql>"
@@ -465,46 +474,72 @@ def xml(out, tableName, className, fields) {
     out.println "</mapper>"
 }
 
-boolean fieldsContainPropertie(propertie, fields) {
-    def isExsit = false
-    fields.each() {
-        if (propertie == it.right) {
-            isExsit = true
+boolean fieldsContainProperties(properties, fields) {
+    def exist = false
+    properties.each() {
+        def property = it
+        fields.each() {
+            if (property == it.right) {
+                exist = true
+            }
         }
     }
-    isExsit
+    exist
 }
 
 boolean propertiesContainField(field, properties) {
-    def isExsit = false
+    def exist = false
     properties.each() {
-        if (field == it) {
-            isExsit = true
+        if (field.right == it) {
+            exist = true
         }
     }
-    isExsit
+    exist
 }
 
 def calcFields(table) {
     DasUtil.getColumns(table).reduce([]) { fields, col ->
         def spec = Case.LOWER.apply(col.getDataType().getSpecification())
-        def typeStr = typeMapping.find { p, t -> p.matcher(spec).find() }.value
-        def dataType = dataTypeMapping.find { p, t -> p.matcher(spec).find() }.value
-        def example = exampleMapping.find { p, t -> p.matcher(spec).find() }.value
+        def javaTypeStr = javaTypeMapping.find { p, t -> p.matcher(spec).find() }.value
+        def parameterTypeStr = parameterTypeMapping.find { p, t -> p.matcher(spec).find() }.value
         fields += [[
-                           left       : javaName(col.getName(), false),
-                           right      : col.getName(),
-                           name       : javaName(col.getName(), false),
-                           dataType   : dataType,
-                           colDataType: col.getDataType(),
-                           example    : example,
-                           type       : typeStr,
-                           comment    : col.getComment(),
-                           annos      : ""]]
+                           javaName     : javaName(col.getName(), false),
+                           colName      : col.getName(),
+                           parameterName: parameterName(col.getName(), true),
+                           dataType     : col.getDataType(),
+                           jdbcType     : col.getDataType(),
+                           javaType     : javaTypeStr,
+                           parameterType: parameterTypeStr,
+                           comment      : col.getComment(),
+                           annos        : ""]]
     }
 }
 
 def javaName(str, capitalize) {
+    String strTmp = str
+    if (strTmp.startsWith("is_")) {
+        str = str.replaceFirst("is_", "")
+    }
+    def s = com.intellij.psi.codeStyle.NameUtil.splitNameIntoWords(str)
+            .collect { Case.LOWER.apply(it).capitalize() }
+            .join("")
+            .replaceAll(/[^\p{javaJavaIdentifierPart}[_]]/, "_")
+    capitalize || s.length() == 1 ? s : Case.LOWER.apply(s[0]) + s[1..-1]
+}
+
+def parameterName(str, capitalize) {
+    String strTmp = str
+    if (strTmp.startsWith("is_")) {
+        str = str.replaceFirst("is_", "")
+    }
+    def s = com.intellij.psi.codeStyle.NameUtil.splitNameIntoWords(str)
+            .collect { Case.LOWER.apply(it).capitalize() }
+            .join("")
+            .replaceAll(/[^\p{javaJavaIdentifierPart}[_]]/, "_")
+    capitalize || s.length() == 1 ? s : Case.LOWER.apply(s[0]) + s[1..-1]
+}
+
+def tableName(str, capitalize) {
     def s = com.intellij.psi.codeStyle.NameUtil.splitNameIntoWords(str)
             .collect { Case.LOWER.apply(it).capitalize() }
             .join("")
