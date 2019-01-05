@@ -58,6 +58,7 @@ def generate(table, dir) {
         basePackageName = packageName.toString().substring(0, index_last)
     }
     def className = javaName(table.getName(), true)
+    def paramName = javaName(table.getName(), false)
     def tableComment = table.getComment()
     def fields = calcFields(table)
 
@@ -68,10 +69,10 @@ def generate(table, dir) {
     def modelFile = new File(modelDir)
     modelFile.mkdirs()
     //创建model文件
-    new File(modelDir, className + "Model.java").withPrintWriter { out -> model(out, className, tableComment, fields) }
+    new File(modelDir, className + "Model.java").withPrintWriter { out -> model(out, className, paramName, tableComment, fields) }
 }
 
-def model(out, className, tableComment, fields) {
+def model(out, className, paramName, tableComment, fields) {
     out.println "package ${packageName}.model;"
     out.println ""
     out.println "import com.fasterxml.jackson.annotation.JsonFormat;"

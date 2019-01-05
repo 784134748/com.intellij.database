@@ -89,7 +89,7 @@ def generate(table, dir) {
     def modelFile = new File(modelDir)
     modelFile.mkdirs()
     //创建model文件
-    new File(modelDir, className + "Model.java").withPrintWriter { out -> model(out, className, tableComment, fields) }
+    new File(modelDir, className + "Model.java").withPrintWriter { out -> model(out, className, paramName, tableComment, fields) }
 
 
 
@@ -100,7 +100,7 @@ def generate(table, dir) {
     //创建xml文件
     xmlFile = new File(xmlDir, className + "Mapper.xml")
     if (!xmlFile.exists()) {
-        xmlFile.withPrintWriter { out -> xml(out, tableName, className, fields) }
+        xmlFile.withPrintWriter { out -> xml(out, tableName, className, paramName, fields) }
     }
 }
 
@@ -135,7 +135,7 @@ def baseMapper(out, className, paramName, tableComment, fields) {
     out.println "     * @param t"
     out.println "     * @return"
     out.println "     */"
-    out.println "    Integer deleteByQuery(T t);"
+    out.println "    Integer deleteByQuery(@Param(\"t\") T t);"
     out.println ""
     out.println "    /**"
     out.println "     * 全量更新"
@@ -167,15 +167,17 @@ def baseMapper(out, className, paramName, tableComment, fields) {
     out.println "     * @param t"
     out.println "     * @return"
     out.println "     */"
-    out.println "    T selectOneByQuery(T t);"
+    out.println "    T selectOneByQuery(@Param(\"t\") T t);"
     out.println ""
     out.println "    /**"
     out.println "     * 通过条件查询"
     out.println "     *"
     out.println "     * @param t"
+    out.println "     * @param pageNum"
+    out.println "     * @param pageSize"
     out.println "     * @return"
     out.println "     */"
-    out.println "    List<T> selectByQuery(T t);"
+    out.println "    List<T> selectByQuery(@Param(\"t\") T t, @Param(\"pageNum\") Integer pageNum, @Param(\"pageSize\") Integer pageSize);"
     out.println ""
     out.println "    /**"
     out.println "     * 通过条件查询条数"
@@ -201,7 +203,7 @@ def mapper(out, className, fields) {
     out.println "}"
 }
 
-def model(out, className, tableComment, fields) {
+def model(out, className, paramName, tableComment, fields) {
     out.println "package ${packageName}.model;"
     out.println ""
     out.println "import com.fasterxml.jackson.annotation.JsonFormat;"
@@ -264,7 +266,7 @@ def model(out, className, tableComment, fields) {
     out.println "}"
 }
 
-def xml(out, tableName, className, fields) {
+def xml(out, tableName, className, paramName, fields) {
     int index = 0
     out.println "<?xml version='1.0' encoding='UTF-8' ?>"
     out.println "<!DOCTYPE mapper PUBLIC '-//mybatis.org//DTD Mapper 3.0//EN' 'http://mybatis.org/dtd/mybatis-3-mapper.dtd' >"
@@ -341,14 +343,14 @@ def xml(out, tableName, className, fields) {
      */
 
     out.println ""
-    out.println "    <select id='selectByQuery' resultMap='BaseResultMap'"
-    out.println "            parameterType='${packageName}.model.${className}Model'>"
+    out.println "    <select id='selectByQuery' resultMap='BaseResultMap'>"
     out.println "        select "
     out.println "        <include refid='Base_Column_List'/>"
     out.println "        from ${tableName} "
     out.println "        <where>"
     out.println "            <include refid='query_filter'/>"
     out.println "        </where>"
+    out.println "        limit #{pageNum}, #{pageSize}"
     out.println "    </select>"
 
     /**
@@ -486,7 +488,7 @@ def xml(out, tableName, className, fields) {
         if (propertiesContainField(it, isDeleteProperties)) {
             out.println "        and ${tableName}.${it.colName} != ${delete}"
         } else {
-            out.println "        <if test='${it.javaName} != null'>and ${tableName}.${it.colName} = #{${it.javaName}}</if>"
+            out.println "        <if test='t.${it.javaName} != null'>and ${tableName}.${it.colName} = #{t.${it.javaName}}</if>"
         }
     }
     out.println "    </sql>"
