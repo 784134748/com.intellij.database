@@ -57,11 +57,20 @@ def generate(table, dir) {
     def paramName = javaName(table.getName(), false)
     def tableComment = table.getComment()
     def fields = calcFields(table)
+
+
+
+    //创建mapper文件夹
     def mapperDir = dir.toString() + sepa + "mapper" + sepa
     def baseMapperDir = dir.toString() + sepa + "mapper" + sepa + "base" + sepa
-    def baseMapperFile = new File(baseMapperDir)
-    baseMapperFile.mkdirs()
-    new File(baseMapperDir, className + "BaseMapper.java").withPrintWriter { out -> baseMapper(out, className, paramName, tableComment, fields) }
+    def baseMapperPath = new File(baseMapperDir)
+    baseMapperPath.mkdirs()
+    //创建BaseMapper.java
+    def baseMapperFile = new File(baseMapperDir, "BaseMapper.java")
+    if (!baseMapperFile.exists()) {
+        baseMapperFile.withPrintWriter { out -> baseMapper(out, className, paramName, tableComment, fields) }
+    }
+    //创建Mapper.java
     def mapperFile = new File(mapperDir, className + "Mapper.java")
     if (!mapperFile.exists()) {
         mapperFile.withPrintWriter { out -> mapper(out, className, fields) }
@@ -71,20 +80,19 @@ def generate(table, dir) {
 def baseMapper(out, className, paramName, tableComment, fields) {
     out.println "package ${packageName}.mapper.base;"
     out.println ""
-    out.println "import ${packageName}.model.${className}Model;"
     out.println "import org.apache.ibatis.annotations.Param;"
     out.println ""
     out.println "import java.util.List;"
     out.println ""
-    out.println "public interface ${className}BaseMapper {"
+    out.println "public interface BaseMapper<T> {"
     out.println ""
     out.println "    /**"
-    out.println "     * 新增${tableComment}"
+    out.println "     * 新增"
     out.println "     *"
-    out.println "     * @param ${paramName}Model"
+    out.println "     * @param t"
     out.println "     * @return"
     out.println "     */"
-    out.println "    Integer insert(${className}Model ${paramName}Model);"
+    out.println "    Integer insert(T t);"
     out.println ""
     out.println "    /**"
     out.println "     * 通过主键删除"
@@ -93,37 +101,30 @@ def baseMapper(out, className, paramName, tableComment, fields) {
     out.println "     * @return"
     out.println "     */"
     out.println "    Integer deleteByPrimaryKey(@Param(\"id\") Long id);"
-    fields.each() {
-        String str = it.colName
-        if (str.endsWith("_id")) {
-            def ForeignKey = javaName(it.colName, true)
-            def foreignKey = javaName(it.colName, false)
-            out.println ""
-            out.println "    /**"
-            out.println "     * 通过${foreignKey}删除"
-            out.println "     *"
-            out.println "     * @param ${foreignKey}"
-            out.println "     * @return"
-            out.println "     */"
-            out.println "    Integer deleteBy${ForeignKey}(@Param(\"${foreignKey}\") Long ${foreignKey});"
-        }
-    }
     out.println ""
     out.println "    /**"
     out.println "     * 通过条件删除"
     out.println "     *"
-    out.println "     * @param ${paramName}Model"
+    out.println "     * @param t"
     out.println "     * @return"
     out.println "     */"
-    out.println "    Integer deleteByQuery(${className}Model ${paramName}Model);"
+    out.println "    Integer deleteByQuery(T t);"
     out.println ""
     out.println "    /**"
-    out.println "     * 更新${tableComment}"
+    out.println "     * 全量更新"
     out.println "     *"
-    out.println "     * @param ${paramName}Model"
+    out.println "     * @param t"
     out.println "     * @return"
     out.println "     */"
-    out.println "    Integer update(${className}Model ${paramName}Model);"
+    out.println "    Integer fullUpdate(T t);"
+    out.println ""
+    out.println "    /**"
+    out.println "     * 增量更新"
+    out.println "     *"
+    out.println "     * @param t"
+    out.println "     * @return"
+    out.println "     */"
+    out.println "    Integer incUpdate(T t);"
     out.println ""
     out.println "    /**"
     out.println "     * 通过主键查询"
@@ -131,46 +132,31 @@ def baseMapper(out, className, paramName, tableComment, fields) {
     out.println "     * @param id"
     out.println "     * @return"
     out.println "     */"
-    out.println "    ${className}Model selectByPrimaryKey(@Param(\"id\") Long id);"
-    fields.each() {
-        String str = it.colName
-        if (str.endsWith("_id")) {
-            def ForeignKey = javaName(it.colName, true)
-            def foreignKey = javaName(it.colName, false)
-            out.println ""
-            out.println "    /**"
-            out.println "     * 通过${foreignKey}查询"
-            out.println "     *"
-            out.println "     * @param ${foreignKey}"
-            out.println "     * @return"
-            out.println "     */"
-            out.println "    List<${className}Model> selectBy${ForeignKey}(@Param(\"${foreignKey}\") Long ${foreignKey});"
-        }
-    }
+    out.println "    T selectByPrimaryKey(@Param(\"id\") Long id);"
     out.println ""
     out.println "    /**"
     out.println "     * 通过条件查询One"
     out.println "     *"
-    out.println "     * @param ${paramName}Model"
+    out.println "     * @param t"
     out.println "     * @return"
     out.println "     */"
-    out.println "    ${className}Model selectOneByQuery(${className}Model ${paramName}Model);"
+    out.println "    T selectOneByQuery(T t);"
     out.println ""
     out.println "    /**"
     out.println "     * 通过条件查询"
     out.println "     *"
-    out.println "     * @param ${paramName}Model"
+    out.println "     * @param t"
     out.println "     * @return"
     out.println "     */"
-    out.println "    List<${className}Model> selectByQuery(${className}Model ${paramName}Model);"
+    out.println "    List<T> selectByQuery(T t);"
     out.println ""
     out.println "    /**"
     out.println "     * 通过条件查询条数"
     out.println "     *"
-    out.println "     * @param ${paramName}Model"
+    out.println "     * @param t"
     out.println "     * @return"
     out.println "     */"
-    out.println "    Integer count(${className}Model ${paramName}Model);"
+    out.println "    Integer count(T t);"
     out.println ""
     out.println "}"
 }
@@ -178,11 +164,12 @@ def baseMapper(out, className, paramName, tableComment, fields) {
 def mapper(out, className, fields) {
     out.println "package ${packageName}.mapper;"
     out.println ""
-    out.println "import ${packageName}.mapper.base.${className}BaseMapper;"
+    out.println "import ${packageName}.mapper.base.BaseMapper;"
+    out.println "import ${packageName}.model.${className}Model;"
     out.println "import org.apache.ibatis.annotations.Mapper;"
     out.println ""
     out.println "@Mapper"
-    out.println "public interface ${className}Mapper extends ${className}BaseMapper {"
+    out.println "public interface ${className}Mapper extends BaseMapper<${className}Model> {"
     out.println ""
     out.println "}"
 }
@@ -192,7 +179,7 @@ boolean fieldsContainProperties(properties, fields) {
     properties.each() {
         def property = it
         fields.each() {
-            if (property == it.right) {
+            if (property == it.colName) {
                 exist = true
             }
         }
@@ -203,7 +190,7 @@ boolean fieldsContainProperties(properties, fields) {
 boolean propertiesContainField(field, properties) {
     def exist = false
     properties.each() {
-        if (field.right == it) {
+        if (field.colName == it) {
             exist = true
         }
     }

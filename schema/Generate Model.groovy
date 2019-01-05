@@ -60,9 +60,14 @@ def generate(table, dir) {
     def className = javaName(table.getName(), true)
     def tableComment = table.getComment()
     def fields = calcFields(table)
+
+
+
+    //创建model文件夹
     def modelDir = dir.toString() + sepa + "model" + sepa
     def modelFile = new File(modelDir)
     modelFile.mkdirs()
+    //创建model文件
     new File(modelDir, className + "Model.java").withPrintWriter { out -> model(out, className, tableComment, fields) }
 }
 
@@ -90,7 +95,7 @@ def model(out, className, tableComment, fields) {
         if (propertiesContainField(it, commonProperties)) {
             if (it.commoent != "") {
                 out.println "    /**"
-                out.println "     * ${it.comment}【${it.colDataType}】"
+                out.println "     * ${it.comment}【${it.jdbcType}】"
                 out.println "     */"
             }
             if (it.commoent != "") {
@@ -108,7 +113,7 @@ def model(out, className, tableComment, fields) {
         } else {
             if (it.commoent != "") {
                 out.println "    /**"
-                out.println "     * ${it.comment}【${it.colDataType}】"
+                out.println "     * ${it.comment}【${it.jdbcType}】"
                 out.println "     */"
             }
             if (it.commoent != "") {
@@ -134,7 +139,7 @@ boolean fieldsContainProperties(properties, fields) {
     properties.each() {
         def property = it
         fields.each() {
-            if (property == it.right) {
+            if (property == it.colName) {
                 exist = true
             }
         }
@@ -145,7 +150,7 @@ boolean fieldsContainProperties(properties, fields) {
 boolean propertiesContainField(field, properties) {
     def exist = false
     properties.each() {
-        if (field.right == it) {
+        if (field.colName == it) {
             exist = true
         }
     }
