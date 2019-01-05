@@ -3,6 +3,9 @@ import com.intellij.database.model.ObjectKind
 import com.intellij.database.util.Case
 import com.intellij.database.util.DasUtil
 
+import java.util.regex.Matcher
+import java.util.regex.Pattern
+
 /*
  * Available context bindings:
  *   SELECTION   Iterable<DasObject>
@@ -208,12 +211,21 @@ def calcFields(table) {
                            javaName     : javaName(col.getName(), false),
                            colName      : col.getName(),
                            parameterName: parameterName(col.getName(), true),
-                           dataType     : col.getDataType(),
-                           jdbcType     : col.getDataType(),
+                           jdbcType     : jdbcType(col.getDataType()),
                            javaType     : javaTypeStr,
                            parameterType: parameterTypeStr,
                            comment      : col.getComment(),
                            annos        : ""]]
+    }
+}
+
+def jdbcType(dataType) {
+    dataTypeTmp = dataType.toString()
+    Pattern pattern = Pattern.compile("([a-z]{1,20})")
+    Matcher matcher = pattern.matcher(dataTypeTmp)
+    while (matcher.find()) {
+        result = matcher.group(1)
+        return result.toUpperCase()
     }
 }
 

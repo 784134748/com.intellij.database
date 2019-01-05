@@ -6,6 +6,8 @@ import com.intellij.database.util.DasUtil
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
+import java.util.regex.Matcher
+import java.util.regex.Pattern
 
 /*
  * Available context bindings:
@@ -61,7 +63,6 @@ def generate(table, dir) {
     def paramName = javaName(table.getName(), false)
     def tableComment = table.getComment()
     def fields = calcFields(table)
-
 
 
     //创建model文件夹
@@ -167,12 +168,21 @@ def calcFields(table) {
                            javaName     : javaName(col.getName(), false),
                            colName      : col.getName(),
                            parameterName: parameterName(col.getName(), true),
-                           dataType     : col.getDataType(),
-                           jdbcType     : col.getDataType(),
+                           jdbcType     : jdbcType(col.getDataType()),
                            javaType     : javaTypeStr,
                            parameterType: parameterTypeStr,
                            comment      : col.getComment(),
                            annos        : ""]]
+    }
+}
+
+def jdbcType(dataType) {
+    dataTypeTmp = dataType.toString()
+    Pattern pattern = Pattern.compile("([a-z]{1,20})")
+    Matcher matcher = pattern.matcher(dataTypeTmp)
+    while (matcher.find()) {
+        result = matcher.group(1)
+        return result.toUpperCase()
     }
 }
 
