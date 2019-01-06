@@ -66,8 +66,8 @@ def generate(table, dir) {
 
     //创建xml文件夹
     def xmlDir = dir.toString().substring(0, index + 10) + sepa + "resources" + sepa + "mapper" + sepa
-    def xmlFile = new File(xmlDir)
-    xmlFile.mkdirs()
+    def xmlPath = new File(xmlDir)
+    xmlPath.mkdirs()
     //创建xml文件
     xmlFile = new File(xmlDir, className + "Mapper.xml")
     if (!xmlFile.exists()) {
