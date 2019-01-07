@@ -67,10 +67,13 @@ def generate(table, dir) {
 
     //创建model文件夹
     def modelDir = dir.toString() + sepa + "model" + sepa
-    def modelFile = new File(modelDir)
-    modelFile.mkdirs()
+    def modelPath = new File(modelDir)
+    modelPath.mkdirs()
+    def modelFile = new File(modelDir, className + "Model.java")
     //创建model文件
-    new File(modelDir, className + "Model.java").withPrintWriter { out -> model(out, className, paramName, tableComment, fields) }
+    if (!modelFile.exists()) {
+        modelFile.withPrintWriter { out -> model(out, className, paramName, tableComment, fields) }
+    }
 }
 
 def model(out, className, paramName, tableComment, fields) {
