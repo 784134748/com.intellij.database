@@ -159,7 +159,7 @@ def xml(out, tableName, className, paramName, fields) {
     out.println "        <where>"
     out.println "            <include refid='query_filter'/>"
     out.println "        </where>"
-    out.println "        limit #{pageNum}, #{pageSize}"
+    out.println "        limit #{start}, #{end}"
     out.println "    </select>"
 
     /**

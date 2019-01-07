@@ -178,11 +178,11 @@ def baseMapper(out, className, paramName, tableComment, fields) {
     out.println "     * 通过条件查询"
     out.println "     *"
     out.println "     * @param t"
-    out.println "     * @param pageNum"
-    out.println "     * @param pageSize"
+    out.println "     * @param start"
+    out.println "     * @param end"
     out.println "     * @return"
     out.println "     */"
-    out.println "    List<T> selectByQuery(@Param(\"t\") T t, @Param(\"pageNum\") Integer pageNum, @Param(\"pageSize\") Integer pageSize);"
+    out.println "    List<T> selectByQuery(@Param(\"t\") T t, @Param(\"start\") Integer start, @Param(\"end\") Integer end);"
     out.println ""
     out.println "    /**"
     out.println "     * 通过条件查询条数"
@@ -355,7 +355,7 @@ def xml(out, tableName, className, paramName, fields) {
     out.println "        <where>"
     out.println "            <include refid='query_filter'/>"
     out.println "        </where>"
-    out.println "        limit #{pageNum}, #{pageSize}"
+    out.println "        limit #{start}, #{end}"
     out.println "    </select>"
 
     /**
