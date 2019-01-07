@@ -187,7 +187,7 @@ def baseMapper(out, className, paramName, tableComment, fields) {
     out.println "     * @param t"
     out.println "     * @return"
     out.println "     */"
-    out.println "    Integer count(T t);"
+    out.println "    Integer count(@Param(\"t\") T t);"
     out.println ""
     out.println "}"
 }
