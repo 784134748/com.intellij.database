@@ -67,7 +67,6 @@ def generate(table, dir) {
     def tableComment = table.getComment()
 
 
-
     //创建mapper文件夹
     def mapperDir = dir.toString() + sepa + "mapper" + sepa
     def baseMapperDir = dir.toString() + sepa + "mapper" + sepa + "base" + sepa
@@ -85,7 +84,6 @@ def generate(table, dir) {
     }
 
 
-
     //创建model文件夹
     def modelDir = dir.toString() + sepa + "model" + sepa
     def modelPath = new File(modelDir)
@@ -95,7 +93,6 @@ def generate(table, dir) {
     if (!modelFile.exists()) {
         modelFile.withPrintWriter { out -> model(out, className, paramName, tableComment, fields) }
     }
-
 
 
     //创建xml文件夹
@@ -287,7 +284,7 @@ def xml(out, tableName, className, paramName, fields) {
     fields.each() {
         if (propertiesContainField(it, idProperties)) {
             out.println "            <idArg column='${it.colName}' javaType='${it.parameterType}'/>"
-        }else {
+        } else {
             out.println "            <arg column='${it.colName}' javaType='${it.parameterType}'/>"
         }
     }
