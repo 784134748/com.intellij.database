@@ -76,7 +76,7 @@ def generate(table, dir) {
     //创建Mapper.java
     def mapperFile = new File(mapperDir, className + "Mapper.java")
     if (!mapperFile.exists()) {
-        mapperFile.withPrintWriter { out -> mapper(out, className, fields) }
+        mapperFile.withPrintWriter { out -> mapper(out, className, paramName, tableComment, fields) }
     }
 }
 
@@ -166,14 +166,14 @@ def baseMapper(out, className, paramName, tableComment, fields) {
     out.println "}"
 }
 
-def mapper(out, className, fields) {
+def mapper(out, className, paramName, tableComment, fields) {
     out.println "package ${packageName}.mapper;"
     out.println ""
     out.println "import ${packageName}.mapper.base.BaseMapper;"
     out.println "import ${packageName}.model.${className}Model;"
-    out.println "import org.apache.ibatis.annotations.Mapper;"
+    out.println "import org.springframework.stereotype.Repository;"
     out.println ""
-    out.println "@Mapper"
+    out.println "@Repository"
     out.println "public interface ${className}Mapper extends BaseMapper<${className}Model> {"
     out.println ""
     out.println "}"

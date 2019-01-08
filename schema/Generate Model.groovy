@@ -67,18 +67,32 @@ def generate(table, dir) {
 
     //创建model文件夹
     def modelDir = dir.toString() + sepa + "model" + sepa
-    def modelPath = new File(modelDir)
-    modelPath.mkdirs()
+    def baseModelDir = dir.toString() + sepa + "model" + sepa + "base" + sepa
+    def baseModelPath = new File(baseModelDir)
+    baseModelPath.mkdirs()
+    //创建BaseModel.java
+    def baseModelFile = new File(baseModelDir, "BaseModel.java")
+    if (!baseModelFile.exists()) {
+        baseModelFile.withPrintWriter { out -> baseModel(out, className, paramName, tableComment, fields) }
+    }
+    //创建Model.java
     def modelFile = new File(modelDir, className + "Model.java")
-    //创建model文件
     if (!modelFile.exists()) {
         modelFile.withPrintWriter { out -> model(out, className, paramName, tableComment, fields) }
     }
 }
 
+def baseModel(out, className, paramName, tableComment, fields) {
+    out.println "package ${packageName}.model.base;"
+    out.println ""
+    out.println "public class BaseModel {"
+    out.println "}"
+}
+
 def model(out, className, paramName, tableComment, fields) {
     out.println "package ${packageName}.model;"
     out.println ""
+    out.println "import ${packageName}.model.base.BaseModel;"
     out.println "import com.fasterxml.jackson.annotation.JsonFormat;"
     out.println "import io.swagger.annotations.ApiModel;"
     out.println "import io.swagger.annotations.ApiModelProperty;"
@@ -92,7 +106,7 @@ def model(out, className, paramName, tableComment, fields) {
     out.println "@NoArgsConstructor"
     out.println "@AllArgsConstructor"
     out.println "@ApiModel(value = \"${className}Model\", description = \"${tableComment}\")"
-    out.println "public class ${className}Model implements Serializable {"
+    out.println "public class ${className}Model extends BaseModel implements Serializable {"
     out.println ""
     out.println "    public static final long serialVersionUID = 1L;"
     out.println ""
