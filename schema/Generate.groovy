@@ -27,9 +27,9 @@ delete = 1
 commonProperties = ["id", "gmt_create", "gmt_modified"] as String[]
 javaTypeMapping = [
         (~/(?i)bigint/)                   : "Long",
-        (~/(?i)int/)                      : "Integer",
+        (~/(?i)int|timestamp/)            : "Integer",
         (~/(?i)float|double|decimal|real/): "Double",
-        (~/(?i)datetime|timestamp/)       : "java.time.LocalDateTime",
+        (~/(?i)datetime/)                 : "java.time.LocalDateTime",
         (~/(?i)date/)                     : "java.time.LocalDate",
         (~/(?i)time/)                     : "java.time.LocalTime",
         (~/(?i)/)                         : "String"
@@ -37,9 +37,9 @@ javaTypeMapping = [
 
 parameterTypeMapping = [
         (~/(?i)bigint/)                   : "java.lang.Long",
-        (~/(?i)int/)                      : "java.lang.Integer",
+        (~/(?i)int|timestamp/)            : "java.lang.Integer",
         (~/(?i)float|double|decimal|real/): "java.lang.Double",
-        (~/(?i)datetime|timestamp/)       : "java.time.LocalDateTime",
+        (~/(?i)datetime/)                 : "java.time.LocalDateTime",
         (~/(?i)date/)                     : "java.time.LocalDate",
         (~/(?i)time/)                     : "java.time.LocalTime",
         (~/(?i)/)                         : "java.lang.String"
@@ -135,7 +135,7 @@ def baseMapper(out, className, paramName, tableComment, fields) {
     out.println "     * @param id"
     out.println "     * @return"
     out.println "     */"
-    out.println "    Integer deleteByPrimaryKey(@Param(\"id\") Long id);"
+    out.println "    Integer deleteByPrimaryKey(@Param(\"id\") Object id);"
     out.println ""
     out.println "    /**"
     out.println "     * 通过条件删除"
@@ -167,7 +167,7 @@ def baseMapper(out, className, paramName, tableComment, fields) {
     out.println "     * @param id"
     out.println "     * @return"
     out.println "     */"
-    out.println "    T selectByPrimaryKey(@Param(\"id\") Long id);"
+    out.println "    T selectByPrimaryKey(@Param(\"id\") Object id);"
     out.println ""
     out.println "    /**"
     out.println "     * 通过条件查询One"
@@ -331,7 +331,11 @@ def xml(out, tableName, className, paramName, fields) {
 
     out.println ""
     out.println "    <select id='selectByPrimaryKey' resultMap='BaseResultMap'"
-    out.println "            parameterType='java.lang.Long'>"
+    fields.each() {
+        if (propertiesContainField(it, idProperties)) {
+            out.println "            parameterType='${it.parameterType}'>"
+        }
+    }
     out.println "        select "
     out.println "        <include refid='Base_Column_List'/>"
     out.println "        from ${tableName} "
@@ -375,12 +379,20 @@ def xml(out, tableName, className, paramName, fields) {
 
     out.println ""
     if (fieldsContainProperties(isDeleteProperties, fields)) {
-        out.println "    <update id='deleteByPrimaryKey' parameterType='java.lang.Long'>"
+        fields.each() {
+            if (propertiesContainField(it, idProperties)) {
+                out.println "    <update id='deleteByPrimaryKey' parameterType='${it.parameterType}'>"
+            }
+        }
         out.println "        update ${tableName} set ${tableName}.${isDeleteProperties[0]} = ${delete} where ${tableName}.id = #{id}"
         out.println "    </update>"
         out.println ""
     } else {
-        out.println "    <delete id='deleteByPrimaryKey' parameterType='java.lang.Long'>"
+        fields.each() {
+            if (propertiesContainField(it, idProperties)) {
+                out.println "    <delete id='deleteByPrimaryKey' parameterType='${it.parameterType}'>"
+            }
+        }
         out.println "        delete from ${tableName} where ${tableName}.id = #{id}"
         out.println "    </delete>"
     }
@@ -434,6 +446,8 @@ def xml(out, tableName, className, paramName, fields) {
             out.println "            ${tableName}.${it.colName},"
         } else if (propertiesContainField(it, isDeleteProperties)) {
             out.println "            ${tableName}.${it.colName},"
+        } else if (it.javaType == "String") {
+            out.println "            <if test='${it.javaName} != null and ${it.javaName} != \"\"'>${tableName}.${it.colName},</if>"
         } else {
             out.println "            <if test='${it.javaName} != null'>${tableName}.${it.colName},</if>"
         }
@@ -464,6 +478,7 @@ def xml(out, tableName, className, paramName, fields) {
     out.println "        <set>"
     fields.each() {
         if (propertiesContainField(it, gmtCreate)) {
+        } else if (propertiesContainField(it, idProperties)) {
         } else if (propertiesContainField(it, gmtModified)) {
             out.println "            ${tableName}.${it.colName} = now(),"
         } else {
@@ -484,6 +499,7 @@ def xml(out, tableName, className, paramName, fields) {
     out.println "        <set>"
     fields.each() {
         if (propertiesContainField(it, gmtCreate)) {
+        } else if (propertiesContainField(it, idProperties)) {
         } else if (propertiesContainField(it, gmtModified)) {
             out.println "            ${tableName}.${it.colName} = now(),"
         } else {

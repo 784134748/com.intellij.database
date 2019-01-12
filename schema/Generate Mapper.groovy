@@ -23,9 +23,9 @@ delete = 1
 commonProperties = ["id", "gmt_create", "gmt_modified"] as String[]
 javaTypeMapping = [
         (~/(?i)bigint/)                   : "Long",
-        (~/(?i)int/)                      : "Integer",
+        (~/(?i)int|timestamp/)            : "Integer",
         (~/(?i)float|double|decimal|real/): "Double",
-        (~/(?i)datetime|timestamp/)       : "java.time.LocalDateTime",
+        (~/(?i)datetime/)                 : "java.time.LocalDateTime",
         (~/(?i)date/)                     : "java.time.LocalDate",
         (~/(?i)time/)                     : "java.time.LocalTime",
         (~/(?i)/)                         : "String"
@@ -33,9 +33,9 @@ javaTypeMapping = [
 
 parameterTypeMapping = [
         (~/(?i)bigint/)                   : "java.lang.Long",
-        (~/(?i)int/)                      : "java.lang.Integer",
+        (~/(?i)int|timestamp/)            : "java.lang.Integer",
         (~/(?i)float|double|decimal|real/): "java.lang.Double",
-        (~/(?i)datetime|timestamp/)       : "java.time.LocalDateTime",
+        (~/(?i)datetime/)                 : "java.time.LocalDateTime",
         (~/(?i)date/)                     : "java.time.LocalDate",
         (~/(?i)time/)                     : "java.time.LocalTime",
         (~/(?i)/)                         : "java.lang.String"
@@ -60,7 +60,6 @@ def generate(table, dir) {
     def paramName = javaName(table.getName(), false)
     def tableComment = table.getComment()
     def fields = calcFields(table)
-
 
 
     //创建mapper文件夹
@@ -103,7 +102,7 @@ def baseMapper(out, className, paramName, tableComment, fields) {
     out.println "     * @param id"
     out.println "     * @return"
     out.println "     */"
-    out.println "    Integer deleteByPrimaryKey(@Param(\"id\") Long id);"
+    out.println "    Integer deleteByPrimaryKey(@Param(\"id\") Object id);"
     out.println ""
     out.println "    /**"
     out.println "     * 通过条件删除"
@@ -135,7 +134,7 @@ def baseMapper(out, className, paramName, tableComment, fields) {
     out.println "     * @param id"
     out.println "     * @return"
     out.println "     */"
-    out.println "    T selectByPrimaryKey(@Param(\"id\") Long id);"
+    out.println "    T selectByPrimaryKey(@Param(\"id\") Object id);"
     out.println ""
     out.println "    /**"
     out.println "     * 通过条件查询One"
