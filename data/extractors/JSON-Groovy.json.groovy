@@ -20,7 +20,7 @@ INDENT = "  "
 def printJSON(level, col, o) {
   switch (o) {
     case null: OUT.append("null"); break
-    case Number: OUT.append("$o"); break
+    case Number: OUT.append(FORMATTER.formatValue(o, col)); break
     case Boolean: OUT.append("$o"); break
     case String: OUT.append("\"${escapeStr(o)}\""); break
     case Tuple: printJSON(level, o[0], o[1]); break

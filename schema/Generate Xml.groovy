@@ -162,7 +162,9 @@ def xml(out, tableName, className, paramName, fields) {
     out.println "        <where>"
     out.println "            <include refid='query_filter'/>"
     out.println "        </where>"
-    out.println "        limit #{start}, #{end}"
+    out.println "        <if test='start != null and end != null'>"
+    out.println "            limit #{start}, #{end}"
+    out.println "        </if>"
     out.println "    </select>"
 
     /**
@@ -239,7 +241,7 @@ def xml(out, tableName, className, paramName, fields) {
         } else if (propertiesContainField(it, isDeleteProperties)) {
             out.println "            ${tableName}.${it.colName},"
         } else if (it.javaType == "String") {
-            out.println "            <if test='${it.javaName} != null and ${it.javaName} != \"\"'>${tableName}.${it.colName},</if>"
+            out.println "            <if test='${it.javaName} != null'>${tableName}.${it.colName},</if>"
         } else {
             out.println "            <if test='${it.javaName} != null'>${tableName}.${it.colName},</if>"
         }

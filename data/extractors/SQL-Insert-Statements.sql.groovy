@@ -22,7 +22,7 @@ def record(columns, dataRow) {
         def value = dataRow.value(column)
         def skipQuote = value.toString().isNumber() || value == null
         def stringValue = value != null ? FORMATTER.format(dataRow, column) : KW_NULL
-        if (DIALECT.getFamilyId().isMysql()) stringValue = stringValue.replace("\\", "\\\\")
+        if (DIALECT.getDbms().isMysql()) stringValue = stringValue.replace("\\", "\\\\")
         OUT.append(skipQuote ? "": QUOTE).append(stringValue.replace(QUOTE, QUOTE + QUOTE))
            .append(skipQuote ? "": QUOTE).append(idx != columns.size() - 1 ? SEP : "")
     }
