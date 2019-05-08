@@ -31,6 +31,7 @@ javaTypeMapping = [
         (~/(?i)datetime/)                 : "java.time.LocalDateTime",
         (~/(?i)date/)                     : "java.time.LocalDate",
         (~/(?i)time/)                     : "java.time.LocalTime",
+        (~/(?i)json/)                     : "String",
         (~/(?i)/)                         : "String"
 ]
 
@@ -41,6 +42,7 @@ parameterTypeMapping = [
         (~/(?i)datetime/)                 : "java.time.LocalDateTime",
         (~/(?i)date/)                     : "java.time.LocalDate",
         (~/(?i)time/)                     : "java.time.LocalTime",
+        (~/(?i)json/)                     : "java.lang.String",
         (~/(?i)/)                         : "java.lang.String"
 ]
 
@@ -77,9 +79,9 @@ def generate(table, dir) {
     }
     //创建Model.java
     def modelFile = new File(modelDir, className + "Model.java")
-    if (!modelFile.exists()) {
+//    if (!modelFile.exists()) {
         modelFile.withPrintWriter { out -> model(out, className, paramName, tableComment, fields) }
-    }
+//    }
 }
 
 def baseModel(out, className, paramName, tableComment, fields) {

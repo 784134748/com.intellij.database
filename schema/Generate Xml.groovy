@@ -29,6 +29,7 @@ javaTypeMapping = [
         (~/(?i)datetime/)                 : "java.time.LocalDateTime",
         (~/(?i)date/)                     : "java.time.LocalDate",
         (~/(?i)time/)                     : "java.time.LocalTime",
+        (~/(?i)json/)                     : "String",
         (~/(?i)/)                         : "String"
 ]
 
@@ -39,8 +40,10 @@ parameterTypeMapping = [
         (~/(?i)datetime/)                 : "java.time.LocalDateTime",
         (~/(?i)date/)                     : "java.time.LocalDate",
         (~/(?i)time/)                     : "java.time.LocalTime",
+        (~/(?i)json/)                     : "java.lang.String",
         (~/(?i)/)                         : "java.lang.String"
 ]
+
 
 sepa = java.io.File.separator
 
@@ -69,9 +72,9 @@ def generate(table, dir) {
     xmlPath.mkdirs()
     //创建xml文件
     xmlFile = new File(xmlDir, className + "Mapper.xml")
-    if (!xmlFile.exists()) {
+//    if (!xmlFile.exists()) {
         xmlFile.withPrintWriter { out -> xml(out, tableName, className, paramName, fields) }
-    }
+//    }
 }
 
 def xml(out, tableName, className, paramName, fields) {

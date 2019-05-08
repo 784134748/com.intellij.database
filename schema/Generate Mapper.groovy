@@ -28,6 +28,7 @@ javaTypeMapping = [
         (~/(?i)datetime/)                 : "java.time.LocalDateTime",
         (~/(?i)date/)                     : "java.time.LocalDate",
         (~/(?i)time/)                     : "java.time.LocalTime",
+        (~/(?i)json/)                     : "String",
         (~/(?i)/)                         : "String"
 ]
 
@@ -38,8 +39,10 @@ parameterTypeMapping = [
         (~/(?i)datetime/)                 : "java.time.LocalDateTime",
         (~/(?i)date/)                     : "java.time.LocalDate",
         (~/(?i)time/)                     : "java.time.LocalTime",
+        (~/(?i)json/)                     : "java.lang.String",
         (~/(?i)/)                         : "java.lang.String"
 ]
+
 
 sepa = java.io.File.separator
 
@@ -74,9 +77,9 @@ def generate(table, dir) {
     }
     //创建Mapper.java
     def mapperFile = new File(mapperDir, className + "Mapper.java")
-    if (!mapperFile.exists()) {
+//    if (!mapperFile.exists()) {
         mapperFile.withPrintWriter { out -> mapper(out, className, paramName, tableComment, fields) }
-    }
+//    }
 }
 
 def baseMapper(out, className, paramName, tableComment, fields) {

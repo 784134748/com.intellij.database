@@ -32,6 +32,7 @@ javaTypeMapping = [
         (~/(?i)datetime/)                 : "java.time.LocalDateTime",
         (~/(?i)date/)                     : "java.time.LocalDate",
         (~/(?i)time/)                     : "java.time.LocalTime",
+        (~/(?i)json/)                     : "String",
         (~/(?i)/)                         : "String"
 ]
 
@@ -42,8 +43,10 @@ parameterTypeMapping = [
         (~/(?i)datetime/)                 : "java.time.LocalDateTime",
         (~/(?i)date/)                     : "java.time.LocalDate",
         (~/(?i)time/)                     : "java.time.LocalTime",
+        (~/(?i)json/)                     : "java.lang.String",
         (~/(?i)/)                         : "java.lang.String"
 ]
+
 
 sepa = java.io.File.separator
 
@@ -79,9 +82,9 @@ def generate(table, dir) {
     }
     //创建Mapper.java
     def mapperFile = new File(mapperDir, className + "Mapper.java")
-    if (!mapperFile.exists()) {
+//    if (!mapperFile.exists()) {
         mapperFile.withPrintWriter { out -> mapper(out, className, paramName, tableComment, fields) }
-    }
+//    }
 
 
     //创建model文件夹
@@ -96,9 +99,9 @@ def generate(table, dir) {
     }
     //创建Model.java
     def modelFile = new File(modelDir, className + "Model.java")
-    if (!modelFile.exists()) {
+//    if (!modelFile.exists()) {
         modelFile.withPrintWriter { out -> model(out, className, paramName, tableComment, fields) }
-    }
+//    }
 
 
     //创建xml文件夹
@@ -107,9 +110,9 @@ def generate(table, dir) {
     xmlFile.mkdirs()
     //创建xml文件
     xmlFile = new File(xmlDir, className + "Mapper.xml")
-    if (!xmlFile.exists()) {
+//    if (!xmlFile.exists()) {
         xmlFile.withPrintWriter { out -> xml(out, tableName, className, paramName, fields) }
-    }
+//    }
 }
 
 def baseMapper(out, className, paramName, tableComment, fields) {
