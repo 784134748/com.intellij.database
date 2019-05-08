@@ -82,9 +82,9 @@ def generate(table, dir) {
     }
     //创建Mapper.java
     def mapperFile = new File(mapperDir, className + "Mapper.java")
-//    if (!mapperFile.exists()) {
+    if (!mapperFile.exists()) {
         mapperFile.withPrintWriter { out -> mapper(out, className, paramName, tableComment, fields) }
-//    }
+    }
 
 
     //创建model文件夹
