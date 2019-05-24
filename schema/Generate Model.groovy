@@ -1,11 +1,7 @@
 import com.intellij.database.model.DasTable
-import com.intellij.database.model.ObjectKind
 import com.intellij.database.util.Case
 import com.intellij.database.util.DasUtil
 
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.LocalTime
 import java.util.regex.Matcher
 import java.util.regex.Pattern
 
@@ -80,7 +76,7 @@ def generate(table, dir) {
     //创建Model.java
     def modelFile = new File(modelDir, className + "Model.java")
 //    if (!modelFile.exists()) {
-        modelFile.withPrintWriter { out -> model(out, className, paramName, tableComment, fields) }
+    modelFile.withPrintWriter { out -> model(out, className, paramName, tableComment, fields) }
 //    }
 }
 
@@ -104,8 +100,8 @@ def model(out, className, paramName, tableComment, fields) {
     out.println "import java.io.Serializable;"
     out.println ""
     out.println "/**"
-    out.println" * @author "
-    out.println" */"
+    out.println " * @author "
+    out.println " */"
     out.println "@Data"
     out.println "@Builder"
     out.println "@NoArgsConstructor"
@@ -117,11 +113,6 @@ def model(out, className, paramName, tableComment, fields) {
     out.println ""
     fields.each() {
         if (propertiesContainField(it, commonProperties)) {
-            if (it.commoent != "") {
-                out.println "    /**"
-                out.println "     * ${it.comment}【${it.jdbcType}】"
-                out.println "     */"
-            }
             if (it.commoent != "") {
                 out.println "    @ApiModelProperty(value = \"${it.comment}\", dataType = \"${it.javaType}\", hidden = true)"
             }
@@ -135,11 +126,6 @@ def model(out, className, paramName, tableComment, fields) {
             out.println "    private ${it.javaType} ${it.javaName};"
             out.println ""
         } else {
-            if (it.commoent != "") {
-                out.println "    /**"
-                out.println "     * ${it.comment}【${it.jdbcType}】"
-                out.println "     */"
-            }
             if (it.commoent != "") {
                 out.println "    @ApiModelProperty(value = \"${it.comment}\", dataType = \"${it.javaType}\")"
             }

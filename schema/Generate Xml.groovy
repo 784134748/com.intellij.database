@@ -1,8 +1,6 @@
 import com.intellij.database.model.DasTable
-import com.intellij.database.model.ObjectKind
 import com.intellij.database.util.Case
 import com.intellij.database.util.DasUtil
-import org.apache.commons.lang3.StringUtils
 
 import java.util.regex.Matcher
 import java.util.regex.Pattern
@@ -73,7 +71,7 @@ def generate(table, dir) {
     //创建xml文件
     xmlFile = new File(xmlDir, className + "Mapper.xml")
 //    if (!xmlFile.exists()) {
-        xmlFile.withPrintWriter { out -> xml(out, tableName, className, paramName, fields) }
+    xmlFile.withPrintWriter { out -> xml(out, tableName, className, paramName, fields) }
 //    }
 }
 

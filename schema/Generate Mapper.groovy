@@ -1,5 +1,4 @@
 import com.intellij.database.model.DasTable
-import com.intellij.database.model.ObjectKind
 import com.intellij.database.util.Case
 import com.intellij.database.util.DasUtil
 
@@ -90,8 +89,8 @@ def baseMapper(out, className, paramName, tableComment, fields) {
     out.println "import java.util.List;"
     out.println ""
     out.println "/**"
-    out.println" * @author "
-    out.println" */"
+    out.println " * @author "
+    out.println " */"
     out.println "public interface BaseMapper<T> {"
     out.println ""
     out.println "    /**"
@@ -179,8 +178,8 @@ def mapper(out, className, paramName, tableComment, fields) {
     out.println "import org.springframework.stereotype.Repository;"
     out.println ""
     out.println "/**"
-    out.println" * @author "
-    out.println" */"
+    out.println " * @author "
+    out.println " */"
     out.println "@Repository"
     out.println "public interface ${className}Mapper extends BaseMapper<${className}Model> {"
     out.println ""
