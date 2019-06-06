@@ -57,10 +57,12 @@ def generate(table, dir) {
     if (index_last != -1) {
         basePackageName = packageName.toString().substring(0, index_last)
     }
+    def baseName = javaName(packageName.substring(packageName.lastIndexOf(".") + 1), true)
     def className = javaName(table.getName(), true)
     def paramName = javaName(table.getName(), false)
-    def tableComment = table.getComment()
     def fields = calcFields(table)
+    def tableName = table.getName()
+    def tableComment = table.getComment()
 
 
     //创建model文件夹
@@ -69,25 +71,25 @@ def generate(table, dir) {
     def baseModelPath = new File(baseModelDir)
     baseModelPath.mkdirs()
     //创建BaseModel.java
-    def baseModelFile = new File(baseModelDir, "BaseModel.java")
+    def baseModelFile = new File(baseModelDir, baseName + "BaseModel.java")
     if (!baseModelFile.exists()) {
-        baseModelFile.withPrintWriter { out -> baseModel(out, className, paramName, tableComment, fields) }
+        baseModelFile.withPrintWriter { out -> baseModel(out, baseName, className, tableName, paramName, tableComment, fields) }
     }
     //创建Model.java
     def modelFile = new File(modelDir, className + "Model.java")
 //    if (!modelFile.exists()) {
-    modelFile.withPrintWriter { out -> model(out, className, paramName, tableComment, fields) }
+    modelFile.withPrintWriter { out -> model(out, baseName, className, tableName, paramName, tableComment, fields) }
 //    }
 }
 
-def baseModel(out, className, paramName, tableComment, fields) {
+def baseModel(out, baseName, className, tableName, paramName, tableComment, fields) {
     out.println "package ${packageName}.model.base;"
     out.println ""
-    out.println "public class BaseModel {"
+    out.println "public class ${baseName}BaseModel {"
     out.println "}"
 }
 
-def model(out, className, paramName, tableComment, fields) {
+def model(out, baseName, className, tableName, paramName, tableComment, fields) {
     out.println "package ${packageName}.model;"
     out.println ""
     out.println "import ${packageName}.model.base.BaseModel;"
@@ -107,7 +109,7 @@ def model(out, className, paramName, tableComment, fields) {
     out.println "@NoArgsConstructor"
     out.println "@AllArgsConstructor"
     out.println "@ApiModel(value = \"${className}Model\", description = \"${tableComment}\")"
-    out.println "public class ${className}Model extends BaseModel implements Serializable {"
+    out.println "public class ${className}Model extends ${baseName}BaseModel implements Serializable {"
     out.println ""
     out.println "    public static final long serialVersionUID = 1L;"
     out.println ""

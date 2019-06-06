@@ -58,10 +58,12 @@ def generate(table, dir) {
     if (index_last != -1) {
         basePackageName = packageName.toString().substring(0, index_last)
     }
+    def baseName = javaName(packageName.substring(packageName.lastIndexOf(".") + 1), true)
     def className = javaName(table.getName(), true)
     def paramName = javaName(table.getName(), false)
     def fields = calcFields(table)
     def tableName = table.getName()
+    def tableComment = table.getComment()
 
 
     //创建xml文件夹
@@ -71,11 +73,11 @@ def generate(table, dir) {
     //创建xml文件
     xmlFile = new File(xmlDir, className + "Mapper.xml")
 //    if (!xmlFile.exists()) {
-    xmlFile.withPrintWriter { out -> xml(out, tableName, className, paramName, fields) }
+    xmlFile.withPrintWriter { out -> xml(out, baseName, className, tableName, paramName, tableComment, fields) }
 //    }
 }
 
-def xml(out, tableName, className, paramName, fields) {
+def xml(out, baseName, className, tableName, paramName, tableComment, fields) {
     int index = 0
     out.println "<?xml version='1.0' encoding='UTF-8' ?>"
     out.println "<!DOCTYPE mapper PUBLIC '-//mybatis.org//DTD Mapper 3.0//EN' 'http://mybatis.org/dtd/mybatis-3-mapper.dtd' >"
@@ -112,7 +114,7 @@ def xml(out, tableName, className, paramName, fields) {
         if (index != 0) {
             out.print ", "
         }
-        out.print "${tableName}.${it.colName}"
+        out.print "${tableName}.`${it.colName}`"
         index++
     }
     out.println ""
@@ -132,7 +134,7 @@ def xml(out, tableName, className, paramName, fields) {
     out.println "        select "
     out.println "        <include refid='Base_Column_List'/>"
     out.println "        from ${tableName} "
-    out.println "        where ${tableName}.id = #{id}"
+    out.println "        where ${tableName}.`id` = #{id}"
     out.println "    </select>"
 
     /**
@@ -179,7 +181,7 @@ def xml(out, tableName, className, paramName, fields) {
                 out.println "    <update id='deleteByPrimaryKey' parameterType='${it.parameterType}'>"
             }
         }
-        out.println "        update ${tableName} set ${tableName}.${isDeleteProperties[0]} = ${delete} where ${tableName}.id = #{id}"
+        out.println "        update ${tableName} set ${tableName}.`${isDeleteProperties[0]}` = ${delete} where ${tableName}.`id` = #{id}"
         out.println "    </update>"
         out.println ""
     } else {
@@ -188,7 +190,7 @@ def xml(out, tableName, className, paramName, fields) {
                 out.println "    <delete id='deleteByPrimaryKey' parameterType='${it.parameterType}'>"
             }
         }
-        out.println "        delete from ${tableName} where ${tableName}.id = #{id}"
+        out.println "        delete from ${tableName} where ${tableName}.`id` = #{id}"
         out.println "    </delete>"
     }
 
@@ -199,7 +201,7 @@ def xml(out, tableName, className, paramName, fields) {
     if (fieldsContainProperties(isDeleteProperties, fields)) {
         out.println ""
         out.println "    <update id='deleteByQuery' parameterType='${packageName}.model.${className}Model'>"
-        out.println "        update ${tableName} set ${tableName}.${isDeleteProperties[0]} = ${delete}"
+        out.println "        update ${tableName} set ${tableName}.`${isDeleteProperties[0]}` = ${delete}"
         out.println "        <where>"
         out.println "            <include refid='query_filter'/>"
         out.println "        </where>"
@@ -236,15 +238,15 @@ def xml(out, tableName, className, paramName, fields) {
     out.println "        <trim prefix='(' suffix=')' suffixOverrides=','>"
     fields.each() {
         if (propertiesContainField(it, gmtCreate)) {
-            out.println "            ${tableName}.${it.colName},"
+            out.println "            ${tableName}.`${it.colName}`,"
         } else if (propertiesContainField(it, gmtModified)) {
-            out.println "            ${tableName}.${it.colName},"
+            out.println "            ${tableName}.`${it.colName}`,"
         } else if (propertiesContainField(it, isDeleteProperties)) {
-            out.println "            ${tableName}.${it.colName},"
+            out.println "            ${tableName}.`${it.colName}`,"
         } else if (it.javaType == "String") {
-            out.println "            <if test='${it.javaName} != null'>${tableName}.${it.colName},</if>"
+            out.println "            <if test='${it.javaName} != null'>${tableName}.`${it.colName}`,</if>"
         } else {
-            out.println "            <if test='${it.javaName} != null'>${tableName}.${it.colName},</if>"
+            out.println "            <if test='${it.javaName} != null'>${tableName}.`${it.colName}`,</if>"
         }
     }
     out.println "        </trim>"
@@ -275,9 +277,9 @@ def xml(out, tableName, className, paramName, fields) {
         if (propertiesContainField(it, gmtCreate)) {
         } else if (propertiesContainField(it, idProperties)) {
         } else if (propertiesContainField(it, gmtModified)) {
-            out.println "            ${tableName}.${it.colName} = now(),"
+            out.println "            ${tableName}.`${it.colName}` = now(),"
         } else {
-            out.println "            ${tableName}.${it.colName} = #{${it.javaName}},"
+            out.println "            ${tableName}.`${it.colName}` = #{${it.javaName}},"
         }
     }
     out.println "        </set>"
@@ -296,13 +298,13 @@ def xml(out, tableName, className, paramName, fields) {
         if (propertiesContainField(it, gmtCreate)) {
         } else if (propertiesContainField(it, idProperties)) {
         } else if (propertiesContainField(it, gmtModified)) {
-            out.println "            ${tableName}.${it.colName} = now(),"
+            out.println "            ${tableName}.`${it.colName}` = now(),"
         } else {
-            out.println "            <if test='${it.javaName} != null'>${tableName}.${it.colName} = #{${it.javaName}},</if>"
+            out.println "            <if test='${it.javaName} != null'>${tableName}.`${it.colName}` = #{${it.javaName}},</if>"
         }
     }
     out.println "        </set>"
-    out.println "        where ${tableName}.id = #{id}"
+    out.println "        where ${tableName}.`id` = #{id}"
     out.println "    </update>"
 
     /**
@@ -313,9 +315,9 @@ def xml(out, tableName, className, paramName, fields) {
     out.println "    <sql id='query_filter'>"
     fields.each() {
         if (propertiesContainField(it, isDeleteProperties)) {
-            out.println "        and ${tableName}.${it.colName} != ${delete}"
+            out.println "        and ${tableName}.`${it.colName}` != ${delete}"
         } else {
-            out.println "        <if test='t.${it.javaName} != null'>and ${tableName}.${it.colName} = #{t.${it.javaName}}</if>"
+            out.println "        <if test='t.${it.javaName} != null'>and ${tableName}.`${it.colName}` = #{t.${it.javaName}}</if>"
         }
     }
     out.println "    </sql>"

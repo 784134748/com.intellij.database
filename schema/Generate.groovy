@@ -58,6 +58,7 @@ def generate(table, dir) {
     if (index_last != -1) {
         basePackageName = packageName.toString().substring(0, index_last)
     }
+    def baseName = javaName(packageName.substring(packageName.lastIndexOf(".") + 1), true)
     def className = javaName(table.getName(), true)
     def paramName = javaName(table.getName(), false)
     def fields = calcFields(table)
@@ -71,14 +72,14 @@ def generate(table, dir) {
     def baseMapperPath = new File(baseMapperDir)
     baseMapperPath.mkdirs()
     //创建BaseMapper.java
-    def baseMapperFile = new File(baseMapperDir, "BaseMapper.java")
+    def baseMapperFile = new File(baseMapperDir, baseName + "BaseMapper.java")
     if (!baseMapperFile.exists()) {
-        baseMapperFile.withPrintWriter { out -> baseMapper(out, className, paramName, tableComment, fields) }
+        baseMapperFile.withPrintWriter { out -> baseMapper(out, baseName, className, tableName, paramName, tableComment, fields) }
     }
     //创建Mapper.java
     def mapperFile = new File(mapperDir, className + "Mapper.java")
     if (!mapperFile.exists()) {
-        mapperFile.withPrintWriter { out -> mapper(out, className, paramName, tableComment, fields) }
+        mapperFile.withPrintWriter { out -> mapper(out, baseName, className, tableName, paramName, tableComment, fields) }
     }
 
 
@@ -88,14 +89,14 @@ def generate(table, dir) {
     def baseModelPath = new File(baseModelDir)
     baseModelPath.mkdirs()
     //创建BaseModel.java
-    def baseModelFile = new File(baseModelDir, "BaseModel.java")
+    def baseModelFile = new File(baseModelDir, baseName + "BaseModel.java")
     if (!baseModelFile.exists()) {
-        baseModelFile.withPrintWriter { out -> baseModel(out, className, paramName, tableComment, fields) }
+        baseModelFile.withPrintWriter { out -> baseModel(out, baseName, className, tableName, paramName, tableComment, fields) }
     }
     //创建Model.java
     def modelFile = new File(modelDir, className + "Model.java")
 //    if (!modelFile.exists()) {
-    modelFile.withPrintWriter { out -> model(out, className, paramName, tableComment, fields) }
+    modelFile.withPrintWriter { out -> model(out, baseName, className, tableName, paramName, tableComment, fields) }
 //    }
 
 
@@ -106,11 +107,11 @@ def generate(table, dir) {
     //创建xml文件
     xmlFile = new File(xmlDir, className + "Mapper.xml")
 //    if (!xmlFile.exists()) {
-    xmlFile.withPrintWriter { out -> xml(out, tableName, className, paramName, fields) }
+    xmlFile.withPrintWriter { out -> xml(out, baseName, className, tableName, paramName, tableComment, fields) }
 //    }
 }
 
-def baseMapper(out, className, paramName, tableComment, fields) {
+def baseMapper(out, baseName, className, tableName, paramName, tableComment, fields) {
     out.println "package ${packageName}.mapper.base;"
     out.println ""
     out.println "import org.apache.ibatis.annotations.Param;"
@@ -120,7 +121,7 @@ def baseMapper(out, className, paramName, tableComment, fields) {
     out.println "/**"
     out.println " * @author "
     out.println " */"
-    out.println "public interface BaseMapper<T> {"
+    out.println "public interface ${baseName}BaseMapper<T> {"
     out.println ""
     out.println "    /**"
     out.println "     * 新增"
@@ -199,10 +200,10 @@ def baseMapper(out, className, paramName, tableComment, fields) {
     out.println "}"
 }
 
-def mapper(out, className, paramName, tableComment, fields) {
+def mapper(out, baseName, className, tableName, paramName, tableComment, fields) {
     out.println "package ${packageName}.mapper;"
     out.println ""
-    out.println "import ${packageName}.mapper.base.BaseMapper;"
+    out.println "import ${packageName}.mapper.base.${baseName}BaseMapper;"
     out.println "import ${packageName}.model.${className}Model;"
     out.println "import org.springframework.stereotype.Repository;"
     out.println ""
@@ -210,19 +211,27 @@ def mapper(out, className, paramName, tableComment, fields) {
     out.println " * @author "
     out.println " */"
     out.println "@Repository"
-    out.println "public interface ${className}Mapper extends BaseMapper<${className}Model> {"
+    out.println "public interface ${className}Mapper extends ${baseName}BaseMapper<${className}Model> {"
+    out.println ""
+    out.println "    /**"
+    out.println "     * 分页条件查询${tableComment}列表"
+    out.println "     *"
+    out.println "     * @param query${className}ListParam"
+    out.println "     * @return"
+    out.println "     */"
+    out.println "    List<Query${className}ListVO> query${className}List(Query${className}ListParam query${className}ListParam);"
     out.println ""
     out.println "}"
 }
 
-def baseModel(out, className, paramName, tableComment, fields) {
+def baseModel(out, baseName, className, tableName, paramName, tableComment, fields) {
     out.println "package ${packageName}.model.base;"
     out.println ""
-    out.println "public class BaseModel {"
+    out.println "public class ${baseName}BaseModel {"
     out.println "}"
 }
 
-def model(out, className, paramName, tableComment, fields) {
+def model(out, baseName, className, tableName, paramName, tableComment, fields) {
     out.println "package ${packageName}.model;"
     out.println ""
     out.println "import ${packageName}.model.base.BaseModel;"
@@ -242,7 +251,7 @@ def model(out, className, paramName, tableComment, fields) {
     out.println "@NoArgsConstructor"
     out.println "@AllArgsConstructor"
     out.println "@ApiModel(value = \"${className}Model\", description = \"${tableComment}\")"
-    out.println "public class ${className}Model extends BaseModel implements Serializable {"
+    out.println "public class ${className}Model extends ${baseName}BaseModel implements Serializable {"
     out.println ""
     out.println "    public static final long serialVersionUID = 1L;"
     out.println ""
@@ -279,7 +288,7 @@ def model(out, className, paramName, tableComment, fields) {
     out.println "}"
 }
 
-def xml(out, tableName, className, paramName, fields) {
+def xml(out, baseName, className, tableName, paramName, tableComment, fields) {
     int index = 0
     out.println "<?xml version='1.0' encoding='UTF-8' ?>"
     out.println "<!DOCTYPE mapper PUBLIC '-//mybatis.org//DTD Mapper 3.0//EN' 'http://mybatis.org/dtd/mybatis-3-mapper.dtd' >"
@@ -316,7 +325,7 @@ def xml(out, tableName, className, paramName, fields) {
         if (index != 0) {
             out.print ", "
         }
-        out.print "${tableName}.${it.colName}"
+        out.print "${tableName}.`${it.colName}`"
         index++
     }
     out.println ""
@@ -336,7 +345,7 @@ def xml(out, tableName, className, paramName, fields) {
     out.println "        select "
     out.println "        <include refid='Base_Column_List'/>"
     out.println "        from ${tableName} "
-    out.println "        where ${tableName}.id = #{id}"
+    out.println "        where ${tableName}.`id` = #{id}"
     out.println "    </select>"
 
     /**
@@ -383,7 +392,7 @@ def xml(out, tableName, className, paramName, fields) {
                 out.println "    <update id='deleteByPrimaryKey' parameterType='${it.parameterType}'>"
             }
         }
-        out.println "        update ${tableName} set ${tableName}.${isDeleteProperties[0]} = ${delete} where ${tableName}.id = #{id}"
+        out.println "        update ${tableName} set ${tableName}.`${isDeleteProperties[0]}` = ${delete} where ${tableName}.`id` = #{id}"
         out.println "    </update>"
         out.println ""
     } else {
@@ -392,7 +401,7 @@ def xml(out, tableName, className, paramName, fields) {
                 out.println "    <delete id='deleteByPrimaryKey' parameterType='${it.parameterType}'>"
             }
         }
-        out.println "        delete from ${tableName} where ${tableName}.id = #{id}"
+        out.println "        delete from ${tableName} where ${tableName}.`id` = #{id}"
         out.println "    </delete>"
     }
 
@@ -403,7 +412,7 @@ def xml(out, tableName, className, paramName, fields) {
     if (fieldsContainProperties(isDeleteProperties, fields)) {
         out.println ""
         out.println "    <update id='deleteByQuery' parameterType='${packageName}.model.${className}Model'>"
-        out.println "        update ${tableName} set ${tableName}.${isDeleteProperties[0]} = ${delete}"
+        out.println "        update ${tableName} set ${tableName}.`${isDeleteProperties[0]}` = ${delete}"
         out.println "        <where>"
         out.println "            <include refid='query_filter'/>"
         out.println "        </where>"
@@ -440,15 +449,15 @@ def xml(out, tableName, className, paramName, fields) {
     out.println "        <trim prefix='(' suffix=')' suffixOverrides=','>"
     fields.each() {
         if (propertiesContainField(it, gmtCreate)) {
-            out.println "            ${tableName}.${it.colName},"
+            out.println "            ${tableName}.`${it.colName}`,"
         } else if (propertiesContainField(it, gmtModified)) {
-            out.println "            ${tableName}.${it.colName},"
+            out.println "            ${tableName}.`${it.colName}`,"
         } else if (propertiesContainField(it, isDeleteProperties)) {
-            out.println "            ${tableName}.${it.colName},"
+            out.println "            ${tableName}.`${it.colName}`,"
         } else if (it.javaType == "String") {
-            out.println "            <if test='${it.javaName} != null'>${tableName}.${it.colName},</if>"
+            out.println "            <if test='${it.javaName} != null'>${tableName}.`${it.colName}`,</if>"
         } else {
-            out.println "            <if test='${it.javaName} != null'>${tableName}.${it.colName},</if>"
+            out.println "            <if test='${it.javaName} != null'>${tableName}.`${it.colName}`,</if>"
         }
     }
     out.println "        </trim>"
@@ -479,9 +488,9 @@ def xml(out, tableName, className, paramName, fields) {
         if (propertiesContainField(it, gmtCreate)) {
         } else if (propertiesContainField(it, idProperties)) {
         } else if (propertiesContainField(it, gmtModified)) {
-            out.println "            ${tableName}.${it.colName} = now(),"
+            out.println "            ${tableName}.`${it.colName}` = now(),"
         } else {
-            out.println "            ${tableName}.${it.colName} = #{${it.javaName}},"
+            out.println "            ${tableName}.`${it.colName}` = #{${it.javaName}},"
         }
     }
     out.println "        </set>"
@@ -500,13 +509,13 @@ def xml(out, tableName, className, paramName, fields) {
         if (propertiesContainField(it, gmtCreate)) {
         } else if (propertiesContainField(it, idProperties)) {
         } else if (propertiesContainField(it, gmtModified)) {
-            out.println "            ${tableName}.${it.colName} = now(),"
+            out.println "            ${tableName}.`${it.colName}` = now(),"
         } else {
-            out.println "            <if test='${it.javaName} != null'>${tableName}.${it.colName} = #{${it.javaName}},</if>"
+            out.println "            <if test='${it.javaName} != null'>${tableName}.`${it.colName}` = #{${it.javaName}},</if>"
         }
     }
     out.println "        </set>"
-    out.println "        where ${tableName}.id = #{id}"
+    out.println "        where ${tableName}.`id` = #{id}"
     out.println "    </update>"
 
     /**
@@ -517,9 +526,9 @@ def xml(out, tableName, className, paramName, fields) {
     out.println "    <sql id='query_filter'>"
     fields.each() {
         if (propertiesContainField(it, isDeleteProperties)) {
-            out.println "        and ${tableName}.${it.colName} != ${delete}"
+            out.println "        and ${tableName}.`${it.colName}` != ${delete}"
         } else {
-            out.println "        <if test='t.${it.javaName} != null'>and ${tableName}.${it.colName} = #{t.${it.javaName}}</if>"
+            out.println "        <if test='t.${it.javaName} != null'>and ${tableName}.`${it.colName}` = #{t.${it.javaName}}</if>"
         }
     }
     out.println "    </sql>"
