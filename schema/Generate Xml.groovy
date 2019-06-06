@@ -222,7 +222,7 @@ def xml(out, baseName, className, tableName, paramName, tableComment, fields) {
 
     out.println ""
     out.println "    <select id='count' resultType='java.lang.Integer' parameterType='${packageName}.model.${className}Model'>"
-    out.println "        select count(*) from ${tableName}"
+    out.println "        select count(${tableName}.*) from ${tableName}"
     out.println "        <where>"
     out.println "            <include refid='query_filter'/>"
     out.println "        </where>"

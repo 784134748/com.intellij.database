@@ -92,7 +92,7 @@ def baseModel(out, baseName, className, tableName, paramName, tableComment, fiel
 def model(out, baseName, className, tableName, paramName, tableComment, fields) {
     out.println "package ${packageName}.model;"
     out.println ""
-    out.println "import ${packageName}.model.base.BaseModel;"
+    out.println "import ${packageName}.model.base.${baseName}BaseModel;"
     out.println "import com.fasterxml.jackson.annotation.JsonFormat;"
     out.println "import io.swagger.annotations.ApiModel;"
     out.println "import io.swagger.annotations.ApiModelProperty;"

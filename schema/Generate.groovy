@@ -109,6 +109,25 @@ def generate(table, dir) {
 //    if (!xmlFile.exists()) {
     xmlFile.withPrintWriter { out -> xml(out, baseName, className, tableName, paramName, tableComment, fields) }
 //    }
+
+    //创建domain文件夹
+    def domainDir = dir.toString() + sepa + "domain" + sepa
+    def domainPath = new File(domainDir)
+    domainPath.mkdirs()
+    //创建vo文件夹
+    def voDir = dir.toString() + sepa + "vo" + sepa
+    def voPath = new File(voDir)
+    voPath.mkdirs()
+    //创建Param.java
+    def paramFile = new File(domainDir, "Query" + className + "ListParam.java")
+    if (!paramFile.exists()) {
+        paramFile.withPrintWriter { out -> domain(out, baseName, className, tableName, paramName, tableComment, fields) }
+    }
+    //创建VO.java
+    def voFile = new File(voDir, "Query" + className + "ListVO.java")
+    if (!voFile.exists()) {
+        voFile.withPrintWriter { out -> vo(out, baseName, className, tableName, paramName, tableComment, fields) }
+    }
 }
 
 def baseMapper(out, baseName, className, tableName, paramName, tableComment, fields) {
@@ -201,11 +220,17 @@ def baseMapper(out, baseName, className, tableName, paramName, tableComment, fie
 }
 
 def mapper(out, baseName, className, tableName, paramName, tableComment, fields) {
+    int index = 0
     out.println "package ${packageName}.mapper;"
     out.println ""
     out.println "import ${packageName}.mapper.base.${baseName}BaseMapper;"
     out.println "import ${packageName}.model.${className}Model;"
+    out.println "import ${packageName}.domain.Query${className}ListParam;"
+    out.println "import ${packageName}.vo.Query${className}ListVO;"
+    out.println "import org.apache.ibatis.annotations.Select;"
     out.println "import org.springframework.stereotype.Repository;"
+    out.println ""
+    out.println "import java.util.List;"
     out.println ""
     out.println "/**"
     out.println " * @author "
@@ -219,7 +244,53 @@ def mapper(out, baseName, className, tableName, paramName, tableComment, fields)
     out.println "     * @param query${className}ListParam"
     out.println "     * @return"
     out.println "     */"
+    out.println "    @Select(\"<script>\" +"
+    out.print "    \"select "
+    fields.each() {
+        if (index != 0) {
+            out.print ", "
+        }
+        out.print "${tableName}.`${it.colName}`"
+        index++
+    }
+    out.println "from ${tableName}\\n\" +"
+    out.println "    \"<where>\" +"
+    fields.each() {
+        if (propertiesContainField(it, isDeleteProperties)) {
+            out.println "    \"and ${tableName}.`${it.colName}` != ${delete}\\n\" +"
+        } else {
+            out.println "    \"<if test='t.${it.javaName} != null'>and ${tableName}.`${it.colName}` = #{t.${it.javaName}}</if>\\n\" +"
+        }
+    }
+    out.println "    \"</where>\" +"
+    out.println "    \"<if test='start != null and end != null'>\" +"
+    out.println "    \"    limit #{start}, #{end}\" +"
+    out.println "    \"</if>\" +"
+    out.println "    \"</script>\")"
     out.println "    List<Query${className}ListVO> query${className}List(Query${className}ListParam query${className}ListParam);"
+    out.println ""
+    out.println "    /**"
+    out.println "     * 分页条件查询${tableComment}列表汇总"
+    out.println "     *"
+    out.println "     * @param query${className}ListParam"
+    out.println "     * @return"
+    out.println "     */"
+    out.println "    @Select(\"<script>\" +"
+    out.println "    \"select count(${tableName}.*) from ${tableName}\\n\" +"
+    out.println "    \"<where>\" +"
+    fields.each() {
+        if (propertiesContainField(it, isDeleteProperties)) {
+            out.println "    \"and ${tableName}.`${it.colName}` != ${delete}\\n\" +"
+        } else {
+            out.println "    \"<if test='t.${it.javaName} != null'>and ${tableName}.`${it.colName}` = #{t.${it.javaName}}</if>\\n\" +"
+        }
+    }
+    out.println "    \"</where>\" +"
+    out.println "    \"<if test='start != null and end != null'>\" +"
+    out.println "    \"    limit #{start}, #{end}\" +"
+    out.println "    \"</if>\" +"
+    out.println "    \"</script>\")"
+    out.println "    Integer query${className}ListCount(Query${className}ListParam query${className}ListParam);"
     out.println ""
     out.println "}"
 }
@@ -234,7 +305,7 @@ def baseModel(out, baseName, className, tableName, paramName, tableComment, fiel
 def model(out, baseName, className, tableName, paramName, tableComment, fields) {
     out.println "package ${packageName}.model;"
     out.println ""
-    out.println "import ${packageName}.model.base.BaseModel;"
+    out.println "import ${packageName}.model.base.${baseName}BaseModel;"
     out.println "import com.fasterxml.jackson.annotation.JsonFormat;"
     out.println "import io.swagger.annotations.ApiModel;"
     out.println "import io.swagger.annotations.ApiModelProperty;"
@@ -433,7 +504,7 @@ def xml(out, baseName, className, tableName, paramName, tableComment, fields) {
 
     out.println ""
     out.println "    <select id='count' resultType='java.lang.Integer' parameterType='${packageName}.model.${className}Model'>"
-    out.println "        select count(*) from ${tableName}"
+    out.println "        select count(${tableName}.*) from ${tableName}"
     out.println "        <where>"
     out.println "            <include refid='query_filter'/>"
     out.println "        </where>"
@@ -534,6 +605,101 @@ def xml(out, baseName, className, tableName, paramName, tableComment, fields) {
     out.println "    </sql>"
     out.println ""
     out.println "</mapper>"
+}
+
+def domain(out, baseName, className, tableName, paramName, tableComment, fields) {
+    out.println "package ${packageName}.domain;"
+    out.println ""
+    out.println "import com.fasterxml.jackson.annotation.JsonFormat;"
+    out.println "import io.swagger.annotations.ApiModelProperty;"
+    out.println "import org.springframework.format.annotation.DateTimeFormat;"
+    out.println "import lombok.*;"
+    out.println ""
+    out.println "/**"
+    out.println " * @author "
+    out.println " */"
+    out.println "@Data"
+    out.println "@Builder"
+    out.println "public class Query${className}ListParam {"
+    out.println ""
+    fields.each() {
+        if (propertiesContainField(it, commonProperties)) {
+            if (it.commoent != "") {
+                out.println "    @ApiModelProperty(value = \"${it.comment}\", dataType = \"${it.javaType}\")"
+            }
+            if (it.annos != "") {
+                out.println "    ${it.annos}"
+            }
+            if (it.javaType.contains("java.time.")) {
+                out.println "    @DateTimeFormat(pattern = \"yyyy-MM-dd HH:mm:ss\")"
+                out.println "    @JsonFormat(pattern = \"yyyy-MM-dd HH:mm:ss\")"
+            }
+            out.println "    private ${it.javaType} ${it.javaName};"
+            out.println ""
+        } else {
+            if (it.commoent != "") {
+                out.println "    @ApiModelProperty(value = \"${it.comment}\", dataType = \"${it.javaType}\")"
+            }
+            if (it.annos != "") {
+                out.println "    ${it.annos}"
+            }
+            if (it.javaType.contains("java.time.")) {
+                out.println "    @DateTimeFormat(pattern = \"yyyy-MM-dd HH:mm:ss\")"
+                out.println "    @JsonFormat(pattern = \"yyyy-MM-dd HH:mm:ss\")"
+            }
+            out.println "    private ${it.javaType} ${it.javaName};"
+            out.println ""
+        }
+    }
+    out.println ""
+    out.println "}"
+}
+
+def vo(out, baseName, className, tableName, paramName, tableComment, fields) {
+    out.println "package ${packageName}.vo;"
+    out.println ""
+    out.println "import com.fasterxml.jackson.annotation.JsonFormat;"
+    out.println "import io.swagger.annotations.ApiModelProperty;"
+    out.println "import org.springframework.format.annotation.DateTimeFormat;"
+    out.println "import lombok.*;"
+    out.println ""
+    out.println "/**"
+    out.println " * @author "
+    out.println " */"
+    out.println "@Data"
+    out.println "public class Query${className}ListVO {"
+    out.println ""
+    fields.each() {
+        if (propertiesContainField(it, commonProperties)) {
+            if (it.commoent != "") {
+                out.println "    @ApiModelProperty(value = \"${it.comment}\", dataType = \"${it.javaType}\")"
+            }
+            if (it.annos != "") {
+                out.println "    ${it.annos}"
+            }
+            if (it.javaType.contains("java.time.")) {
+                out.println "    @DateTimeFormat(pattern = \"yyyy-MM-dd HH:mm:ss\")"
+                out.println "    @JsonFormat(pattern = \"yyyy-MM-dd HH:mm:ss\")"
+            }
+            out.println "    private ${it.javaType} ${it.javaName};"
+            out.println ""
+        } else {
+            if (it.commoent != "") {
+                out.println "    @ApiModelProperty(value = \"${it.comment}\", dataType = \"${it.javaType}\")"
+            }
+            if (it.annos != "") {
+                out.println "    ${it.annos}"
+            }
+            if (it.javaType.contains("java.time.")) {
+                out.println "    @DateTimeFormat(pattern = \"yyyy-MM-dd HH:mm:ss\")"
+                out.println "    @JsonFormat(pattern = \"yyyy-MM-dd HH:mm:ss\")"
+            }
+            out.println "    private ${it.javaType} ${it.javaName};"
+            out.println ""
+        }
+    }
+    out.println ""
+    out.println "}"
 }
 
 boolean fieldsContainProperties(properties, fields) {

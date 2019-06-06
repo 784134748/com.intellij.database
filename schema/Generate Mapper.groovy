@@ -74,12 +74,12 @@ def generate(table, dir) {
     //创建BaseMapper.java
     def baseMapperFile = new File(baseMapperDir, baseName + "BaseMapper.java")
     if (!baseMapperFile.exists()) {
-        baseMapperFile.withPrintWriter { out -> baseMapper(out, baseName, className, paramName, tableComment, fields) }
+        baseMapperFile.withPrintWriter { out -> baseMapper(out, baseName, className, tableName, paramName, tableComment, fields) }
     }
     //创建Mapper.java
     def mapperFile = new File(mapperDir, className + "Mapper.java")
     if (!mapperFile.exists()) {
-        mapperFile.withPrintWriter { out -> mapper(out, baseName, className, paramName, tableComment, fields) }
+        mapperFile.withPrintWriter { out -> mapper(out, baseName, className, tableName, paramName, tableComment, fields) }
     }
 }
 
@@ -173,11 +173,17 @@ def baseMapper(out, baseName, className, tableName, paramName, tableComment, fie
 }
 
 def mapper(out, baseName, className, tableName, paramName, tableComment, fields) {
+    int index = 0
     out.println "package ${packageName}.mapper;"
     out.println ""
     out.println "import ${packageName}.mapper.base.${baseName}BaseMapper;"
     out.println "import ${packageName}.model.${className}Model;"
+    out.println "import ${packageName}.domain.Query${className}ListParam;"
+    out.println "import ${packageName}.vo.Query${className}ListVO;"
+    out.println "import org.apache.ibatis.annotations.Select;"
     out.println "import org.springframework.stereotype.Repository;"
+    out.println ""
+    out.println "import java.util.List;"
     out.println ""
     out.println "/**"
     out.println " * @author "
@@ -191,7 +197,53 @@ def mapper(out, baseName, className, tableName, paramName, tableComment, fields)
     out.println "     * @param query${className}ListParam"
     out.println "     * @return"
     out.println "     */"
+    out.println "    @Select(\"<script>\" +"
+    out.print "    \"select "
+    fields.each() {
+        if (index != 0) {
+            out.print ", "
+        }
+        out.print "${tableName}.`${it.colName}`"
+        index++
+    }
+    out.println "from ${tableName}\\n\" +"
+    out.println "    \"<where>\" +"
+    fields.each() {
+        if (propertiesContainField(it, isDeleteProperties)) {
+            out.println "    \"and ${tableName}.`${it.colName}` != ${delete}\\n\" +"
+        } else {
+            out.println "    \"<if test='t.${it.javaName} != null'>and ${tableName}.`${it.colName}` = #{t.${it.javaName}}</if>\\n\" +"
+        }
+    }
+    out.println "    \"</where>\" +"
+    out.println "    \"<if test='start != null and end != null'>\" +"
+    out.println "    \"    limit #{start}, #{end}\" +"
+    out.println "    \"</if>\" +"
+    out.println "    \"</script>\")"
     out.println "    List<Query${className}ListVO> query${className}List(Query${className}ListParam query${className}ListParam);"
+    out.println ""
+    out.println "    /**"
+    out.println "     * 分页条件查询${tableComment}列表汇总"
+    out.println "     *"
+    out.println "     * @param query${className}ListParam"
+    out.println "     * @return"
+    out.println "     */"
+    out.println "    @Select(\"<script>\" +"
+    out.println "    \"select count(${tableName}.*) from ${tableName}\\n\" +"
+    out.println "    \"<where>\" +"
+    fields.each() {
+        if (propertiesContainField(it, isDeleteProperties)) {
+            out.println "    \"and ${tableName}.`${it.colName}` != ${delete}\\n\" +"
+        } else {
+            out.println "    \"<if test='t.${it.javaName} != null'>and ${tableName}.`${it.colName}` = #{t.${it.javaName}}</if>\\n\" +"
+        }
+    }
+    out.println "    \"</where>\" +"
+    out.println "    \"<if test='start != null and end != null'>\" +"
+    out.println "    \"    limit #{start}, #{end}\" +"
+    out.println "    \"</if>\" +"
+    out.println "    \"</script>\")"
+    out.println "    Integer query${className}ListCount(Query${className}ListParam query${className}ListParam);"
     out.println ""
     out.println "}"
 }
