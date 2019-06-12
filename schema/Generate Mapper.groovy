@@ -199,36 +199,6 @@ def mapper(out, baseName, className, tableName, paramName, tableComment, fields)
     out.println "     * @param likes"
     out.println "     * @return"
     out.println "     */"
-    out.println "    @Select(\"<script>\" +"
-    out.print "            \"select "
-    fields.each() {
-        if (index != 0) {
-            out.print ", "
-        }
-        out.print "${tableName}.`${it.colName}`"
-        index++
-    }
-    out.println "from ${tableName}\\n\" +"
-    out.println "            \"<where>\" +"
-    fields.each() {
-        if (propertiesContainField(it, isDeleteProperties)) {
-            out.println "            \"and ${tableName}.`${it.colName}` != ${delete}\\n\" +"
-        } else {
-            out.println "            \"<if test='equals.${it.javaName} != null'>and ${tableName}.`${it.colName}` = #{equals.${it.javaName}}</if>\\n\" +"
-        }
-    }
-    fields.each() {
-        if (propertiesContainField(it, isDeleteProperties)) {
-            out.println "            \"and ${tableName}.`${it.colName}` != ${delete}\\n\" +"
-        } else {
-            out.println "            \"<if test='likes.${it.javaName} != null'>and ${tableName}.`${it.colName}` like CONCAT('%',#{likes.${it.javaName}},'%')</if>\\n\" +"
-        }
-    }
-    out.println "            \"</where>\" +"
-    out.println "            \"<if test='start != null and end != null'>\" +"
-    out.println "            \"    limit #{start}, #{end}\" +"
-    out.println "            \"</if>\" +"
-    out.println "            \"</script>\")"
     out.println "    List<Query${className}ListVO> query${className}List(@Param(\"equals\") Query${className}ListParam equals, @Param(\"likes\") Query${className}ListParam likes);"
     out.println ""
     out.println "    /**"
@@ -238,28 +208,6 @@ def mapper(out, baseName, className, tableName, paramName, tableComment, fields)
     out.println "     * @param likes"
     out.println "     * @return"
     out.println "     */"
-    out.println "    @Select(\"<script>\" +"
-    out.println "            \"select count(*) from ${tableName}\\n\" +"
-    out.println "            \"<where>\" +"
-    fields.each() {
-        if (propertiesContainField(it, isDeleteProperties)) {
-            out.println "            \"and ${tableName}.`${it.colName}` != ${delete}\\n\" +"
-        } else {
-            out.println "            \"<if test='equals.${it.javaName} != null'>and ${tableName}.`${it.colName}` = #{equals.${it.javaName}}</if>\\n\" +"
-        }
-    }
-    fields.each() {
-        if (propertiesContainField(it, isDeleteProperties)) {
-            out.println "            \"and ${tableName}.`${it.colName}` != ${delete}\\n\" +"
-        } else {
-            out.println "            \"<if test='likes.${it.javaName} != null'>and ${tableName}.`${it.colName}`like CONCAT('%',#{likes.${it.javaName}},'%')</if>\\n\" +"
-        }
-    }
-    out.println "            \"</where>\" +"
-    out.println "            \"<if test='start != null and end != null'>\" +"
-    out.println "            \"    limit #{start}, #{end}\" +"
-    out.println "            \"</if>\" +"
-    out.println "            \"</script>\")"
     out.println "    Integer query${className}ListCount(@Param(\"equals\") Query${className}ListParam equals, @Param(\"likes\") Query${className}ListParam likes);"
     out.println ""
     out.println "}"
