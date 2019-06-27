@@ -230,94 +230,17 @@ def baseMapper(out, baseName, className, tableName, paramName, tableComment, fie
 }
 
 def mapper(out, baseName, className, tableName, paramName, tableComment, fields) {
-    int index = 0
     out.println "package ${packageName}.mapper;"
     out.println ""
     out.println "import ${packageName}.mapper.base.${baseName}BaseMapper;"
     out.println "import ${packageName}.model.${className}Model;"
-    out.println "import ${packageName}.domain.Query${className}ListParam;"
-    out.println "import ${packageName}.vo.Query${className}ListVO;"
-    out.println "import org.apache.ibatis.annotations.Param;"
-    out.println "import org.apache.ibatis.annotations.Select;"
     out.println "import org.springframework.stereotype.Repository;"
-    out.println ""
-    out.println "import java.util.List;"
     out.println ""
     out.println "/**"
     out.println " * @author "
     out.println " */"
     out.println "@Repository"
     out.println "public interface ${className}Mapper extends ${baseName}BaseMapper<${className}Model> {"
-    out.println ""
-    out.println "    /**"
-    out.println "     * 分页条件查询${tableComment}列表"
-    out.println "     *"
-    out.println "     * @param equals"
-    out.println "     * @param likes"
-    out.println "     * @return"
-    out.println "     */"
-    out.println "    @Select(\"<script>\" +"
-    out.print "            \"select "
-    fields.each() {
-        if (index != 0) {
-            out.print ", "
-        }
-        out.print "${tableName}.`${it.colName}`"
-        index++
-    }
-    out.println "from ${tableName}\\n\" +"
-    out.println "            \"<where>\" +"
-    fields.each() {
-        if (propertiesContainField(it, isDeleteProperties)) {
-            out.println "            \"and ${tableName}.`${it.colName}` != ${delete}\\n\" +"
-        } else {
-            out.println "            \"<if test='equals.${it.javaName} != null'>and ${tableName}.`${it.colName}` = #{equals.${it.javaName}}</if>\\n\" +"
-        }
-    }
-    fields.each() {
-        if (propertiesContainField(it, isDeleteProperties)) {
-            out.println "            \"and ${tableName}.`${it.colName}` != ${delete}\\n\" +"
-        } else {
-            out.println "            \"<if test='likes.${it.javaName} != null'>and ${tableName}.`${it.colName}` like CONCAT('%',#{likes.${it.javaName}},'%')</if>\\n\" +"
-        }
-    }
-    out.println "            \"</where>\" +"
-    out.println "            \"<if test='start != null and end != null'>\" +"
-    out.println "            \"    limit #{start}, #{end}\" +"
-    out.println "            \"</if>\" +"
-    out.println "            \"</script>\")"
-    out.println "    List<Query${className}ListVO> query${className}List(@Param(\"equals\") Query${className}ListParam equals, @Param(\"likes\") Query${className}ListParam likes);"
-    out.println ""
-    out.println "    /**"
-    out.println "     * 分页条件查询${tableComment}列表汇总"
-    out.println "     *"
-    out.println "     * @param equals"
-    out.println "     * @param likes"
-    out.println "     * @return"
-    out.println "     */"
-    out.println "    @Select(\"<script>\" +"
-    out.println "            \"select count(*) from ${tableName}\\n\" +"
-    out.println "            \"<where>\" +"
-    fields.each() {
-        if (propertiesContainField(it, isDeleteProperties)) {
-            out.println "            \"and ${tableName}.`${it.colName}` != ${delete}\\n\" +"
-        } else {
-            out.println "            \"<if test='equals.${it.javaName} != null'>and ${tableName}.`${it.colName}` = #{equals.${it.javaName}}</if>\\n\" +"
-        }
-    }
-    fields.each() {
-        if (propertiesContainField(it, isDeleteProperties)) {
-            out.println "            \"and ${tableName}.`${it.colName}` != ${delete}\\n\" +"
-        } else {
-            out.println "            \"<if test='likes.${it.javaName} != null'>and ${tableName}.`${it.colName}`like CONCAT('%',#{likes.${it.javaName}},'%')</if>\\n\" +"
-        }
-    }
-    out.println "            \"</where>\" +"
-    out.println "            \"<if test='start != null and end != null'>\" +"
-    out.println "            \"    limit #{start}, #{end}\" +"
-    out.println "            \"</if>\" +"
-    out.println "            \"</script>\")"
-    out.println "    Integer query${className}ListCount(@Param(\"equals\") Query${className}ListParam equals, @Param(\"likes\") Query${className}ListParam likes);"
     out.println ""
     out.println "}"
 }
