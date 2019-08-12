@@ -14,6 +14,8 @@ import java.util.regex.Pattern
 
 packageName = ""
 basePackageName = ""
+baseMapprePath = "com.aidynamic.igrow.core.base.BaseMapper"
+baseModePath = "com.aidynamic.igrow.core.base.BaseModel"
 idProperties = ["id"] as String[]
 gmtCreate = ["gmt_create"] as String[]
 gmtModified = ["gmt_modified"] as String[]
@@ -58,7 +60,7 @@ def generate(table, dir) {
     if (index_last != -1) {
         basePackageName = packageName.toString().substring(0, index_last)
     }
-    def baseName = javaName(packageName.substring(packageName.lastIndexOf(".") + 1), true)
+    def baseName = ""
     def className = javaName(table.getName(), true)
     def paramName = javaName(table.getName(), false)
     def fields = calcFields(table)
@@ -68,14 +70,8 @@ def generate(table, dir) {
 
     //创建mapper文件夹
     def mapperDir = dir.toString() + sepa + "mapper" + sepa
-    def baseMapperDir = dir.toString() + sepa + "mapper" + sepa + "base" + sepa
-    def baseMapperPath = new File(baseMapperDir)
-    baseMapperPath.mkdirs()
-    //创建BaseMapper.java
-    def baseMapperFile = new File(baseMapperDir, baseName + "BaseMapper.java")
-    if (!baseMapperFile.exists()) {
-        baseMapperFile.withPrintWriter { out -> baseMapper(out, baseName, className, tableName, paramName, tableComment, fields) }
-    }
+    def mapperPath = new File(mapperDir)
+    mapperPath.mkdirs()
     //创建Mapper.java
     def mapperFile = new File(mapperDir, className + "Mapper.java")
     if (!mapperFile.exists()) {
@@ -85,19 +81,11 @@ def generate(table, dir) {
 
     //创建model文件夹
     def modelDir = dir.toString() + sepa + "model" + sepa
-    def baseModelDir = dir.toString() + sepa + "model" + sepa + "base" + sepa
-    def baseModelPath = new File(baseModelDir)
-    baseModelPath.mkdirs()
-    //创建BaseModel.java
-    def baseModelFile = new File(baseModelDir, baseName + "BaseModel.java")
-    if (!baseModelFile.exists()) {
-        baseModelFile.withPrintWriter { out -> baseModel(out, baseName, className, tableName, paramName, tableComment, fields) }
-    }
+    def modelPath = new File(modelDir)
+    modelPath.mkdirs()
     //创建Model.java
     def modelFile = new File(modelDir, className + "Model.java")
-//    if (!modelFile.exists()) {
     modelFile.withPrintWriter { out -> model(out, baseName, className, tableName, paramName, tableComment, fields) }
-//    }
 
 
     //创建xml文件夹
@@ -110,15 +98,16 @@ def generate(table, dir) {
     if (!xmlFile.exists()) {
         xmlFile.withPrintWriter { out -> xml(out, baseName, className, tableName, paramName, tableComment, fields) }
         BufferedReader reader = new BufferedReader(new FileReader(xmlFile))
-        xmlFileTmp.withPrintWriter { out -> repalce(reader, out, baseName, className, tableName, paramName, tableComment, fields) }
+        xmlFileTmp.withPrintWriter { out -> replace(reader, out, baseName, className, tableName, paramName, tableComment, fields) }
         xmlFile.delete()
         xmlFileTmp.renameTo(xmlFile)
     } else {
         BufferedReader reader = new BufferedReader(new FileReader(xmlFile))
-        xmlFileTmp.withPrintWriter { out -> repalce(reader, out, baseName, className, tableName, paramName, tableComment, fields) }
+        xmlFileTmp.withPrintWriter { out -> replace(reader, out, baseName, className, tableName, paramName, tableComment, fields) }
         xmlFile.delete()
         xmlFileTmp.renameTo(xmlFile)
     }
+
 
     //创建domain文件夹
     def domainDir = dir.toString() + sepa + "domain" + sepa
@@ -140,100 +129,11 @@ def generate(table, dir) {
     }
 }
 
-def baseMapper(out, baseName, className, tableName, paramName, tableComment, fields) {
-    out.println "package ${packageName}.mapper.base;"
-    out.println ""
-    out.println "import org.apache.ibatis.annotations.Param;"
-    out.println ""
-    out.println "import java.util.List;"
-    out.println ""
-    out.println "/**"
-    out.println " * @author "
-    out.println " */"
-    out.println "public interface ${baseName}BaseMapper<T> {"
-    out.println ""
-    out.println "    /**"
-    out.println "     * 新增"
-    out.println "     *"
-    out.println "     * @param t"
-    out.println "     * @return"
-    out.println "     */"
-    out.println "    Integer insert(T t);"
-    out.println ""
-    out.println "    /**"
-    out.println "     * 通过主键删除"
-    out.println "     *"
-    out.println "     * @param id"
-    out.println "     * @return"
-    out.println "     */"
-    out.println "    Integer deleteByPrimaryKey(@Param(\"id\") Object id);"
-    out.println ""
-    out.println "    /**"
-    out.println "     * 通过条件删除"
-    out.println "     *"
-    out.println "     * @param t"
-    out.println "     * @return"
-    out.println "     */"
-    out.println "    Integer deleteByQuery(@Param(\"t\") T t);"
-    out.println ""
-    out.println "    /**"
-    out.println "     * 全量更新"
-    out.println "     *"
-    out.println "     * @param t"
-    out.println "     * @return"
-    out.println "     */"
-    out.println "    Integer fullUpdate(T t);"
-    out.println ""
-    out.println "    /**"
-    out.println "     * 增量更新"
-    out.println "     *"
-    out.println "     * @param t"
-    out.println "     * @return"
-    out.println "     */"
-    out.println "    Integer incUpdate(T t);"
-    out.println ""
-    out.println "    /**"
-    out.println "     * 通过主键查询"
-    out.println "     *"
-    out.println "     * @param id"
-    out.println "     * @return"
-    out.println "     */"
-    out.println "    T selectByPrimaryKey(@Param(\"id\") Object id);"
-    out.println ""
-    out.println "    /**"
-    out.println "     * 通过条件查询One"
-    out.println "     *"
-    out.println "     * @param t"
-    out.println "     * @return"
-    out.println "     */"
-    out.println "    T selectOneByQuery(@Param(\"t\") T t);"
-    out.println ""
-    out.println "    /**"
-    out.println "     * 通过条件查询"
-    out.println "     *"
-    out.println "     * @param t"
-    out.println "     * @param start"
-    out.println "     * @param end"
-    out.println "     * @return"
-    out.println "     */"
-    out.println "    List<T> selectByQuery(@Param(\"t\") T t, @Param(\"start\") Integer start, @Param(\"end\") Integer end);"
-    out.println ""
-    out.println "    /**"
-    out.println "     * 通过条件查询条数"
-    out.println "     *"
-    out.println "     * @param t"
-    out.println "     * @return"
-    out.println "     */"
-    out.println "    Integer count(@Param(\"t\") T t);"
-    out.println ""
-    out.println "}"
-}
-
 def mapper(out, baseName, className, tableName, paramName, tableComment, fields) {
     int index = 0
     out.println "package ${packageName}.mapper;"
     out.println ""
-    out.println "import ${packageName}.mapper.base.${baseName}BaseMapper;"
+    out.println "import ${baseMapprePath};"
     out.println "import ${packageName}.model.${className}Model;"
     out.println "import ${packageName}.domain.Query${className}ListCondition;"
     out.println "import ${packageName}.vo.Query${className}ListDTO;"
@@ -248,35 +148,20 @@ def mapper(out, baseName, className, tableName, paramName, tableComment, fields)
     out.println "public interface ${className}Mapper extends ${baseName}BaseMapper<${className}Model> {"
     out.println ""
     out.println "    /**"
-    out.println "     * 分页条件查询${tableComment}列表"
+    out.println "     * 自定义的分页条件查询${tableComment}列表"
     out.println "     *"
     out.println "     * @param condition"
     out.println "     * @return"
     out.println "     */"
-    out.println "    List<Query${className}ListDTO> query${className}List(Query${className}ListCondition condition);"
+    out.println "    List<Query${className}ListDTO> defineQueryList(Query${className}ListCondition condition);"
     out.println ""
-    out.println "    /**"
-    out.println "     * 分页条件查询${tableComment}列表汇总"
-    out.println "     *"
-    out.println "     * @param condition"
-    out.println "     * @return"
-    out.println "     */"
-    out.println "    Integer query${className}ListCount(Query${className}ListCondition condition);"
-    out.println ""
-    out.println "}"
-}
-
-def baseModel(out, baseName, className, tableName, paramName, tableComment, fields) {
-    out.println "package ${packageName}.model.base;"
-    out.println ""
-    out.println "public class ${baseName}BaseModel {"
     out.println "}"
 }
 
 def model(out, baseName, className, tableName, paramName, tableComment, fields) {
     out.println "package ${packageName}.model;"
     out.println ""
-    out.println "import ${packageName}.model.base.${baseName}BaseModel;"
+    out.println "import ${baseModePath};"
     out.println "import com.fasterxml.jackson.annotation.JsonFormat;"
     out.println "import io.swagger.annotations.ApiModel;"
     out.println "import io.swagger.annotations.ApiModelProperty;"
@@ -337,11 +222,21 @@ def xml(out, baseName, className, tableName, paramName, tableComment, fields) {
     out.println ""
     out.println "    <!--一串华丽的分割线,分割线内禁止任何形式的修改-->"
     out.println "    <!--一串华丽的分割线,分割线内禁止任何形式的修改-->"
+
+    /**
+     * defineQueryList
+     */
+
+    out.println ""
+    out.println "    <select id='defineQueryList' resultMap='BaseResultMap'"
+    out.println "            parameterType='${packageName}.domain.Query${className}ListCondition'>"
+    out.println "    </select>"
+
     out.println ""
     out.println "</mapper>"
 }
 
-def repalce(reader, out, baseName, className, tableName, paramName, tableComment, fields) {
+def replace(reader, out, baseName, className, tableName, paramName, tableComment, fields) {
     int index = 0
     boolean ignore = false
     int time = 0

@@ -76,12 +76,12 @@ def generate(table, dir) {
     if (!xmlFile.exists()) {
         xmlFile.withPrintWriter { out -> xml(out, baseName, className, tableName, paramName, tableComment, fields) }
         BufferedReader reader = new BufferedReader(new FileReader(xmlFile))
-        xmlFileTmp.withPrintWriter { out -> repalce(reader, out, baseName, className, tableName, paramName, tableComment, fields) }
+        xmlFileTmp.withPrintWriter { out -> replace(reader, out, baseName, className, tableName, paramName, tableComment, fields) }
         xmlFile.delete()
         xmlFileTmp.renameTo(xmlFile)
     } else {
         BufferedReader reader = new BufferedReader(new FileReader(xmlFile))
-        xmlFileTmp.withPrintWriter { out -> repalce(reader, out, baseName, className, tableName, paramName, tableComment, fields) }
+        xmlFileTmp.withPrintWriter { out -> replace(reader, out, baseName, className, tableName, paramName, tableComment, fields) }
         xmlFile.delete()
         xmlFileTmp.renameTo(xmlFile)
     }
@@ -94,11 +94,21 @@ def xml(out, baseName, className, tableName, paramName, tableComment, fields) {
     out.println ""
     out.println "    <!--一串华丽的分割线,分割线内禁止任何形式的修改-->"
     out.println "    <!--一串华丽的分割线,分割线内禁止任何形式的修改-->"
+
+    /**
+     * defineQueryList
+     */
+
+    out.println ""
+    out.println "    <select id='defineQueryList' resultMap='BaseResultMap'"
+    out.println "            parameterType='${packageName}.domain.Query${className}ListCondition'>"
+    out.println "    </select>"
+
     out.println ""
     out.println "</mapper>"
 }
 
-def repalce(reader, out, baseName, className, tableName, paramName, tableComment, fields) {
+def replace(reader, out, baseName, className, tableName, paramName, tableComment, fields) {
     int index = 0
     boolean ignore = false
     int time = 0

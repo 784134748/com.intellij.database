@@ -54,11 +54,11 @@ def generate(table, dir) {
     if (index != -1) {
         packageName = dir.toString().substring(index + 15).replaceAll(sepa, ".")
     }
-    int index_last = packageName.lastIndexOf(".")
+    index_last = packageName.lastIndexOf(".")
     if (index_last != -1) {
         basePackageName = packageName.toString().substring(0, index_last)
     }
-    def baseName = javaName(packageName.substring(packageName.lastIndexOf(".") + 1), true)
+    def baseName = ""
     def className = javaName(table.getName(), true)
     def paramName = javaName(table.getName(), false)
     def fields = calcFields(table)
@@ -76,11 +76,19 @@ def generate(table, dir) {
     if (!baseMapperFile.exists()) {
         baseMapperFile.withPrintWriter { out -> baseMapper(out, baseName, className, tableName, paramName, tableComment, fields) }
     }
-    //创建Mapper.java
-    def mapperFile = new File(mapperDir, className + "Mapper.java")
-    if (!mapperFile.exists()) {
-        mapperFile.withPrintWriter { out -> mapper(out, baseName, className, tableName, paramName, tableComment, fields) }
+
+
+    //创建model文件夹
+    def modelDir = dir.toString() + sepa + "model" + sepa
+    def baseModelDir = dir.toString() + sepa + "model" + sepa + "base" + sepa
+    def baseModelPath = new File(baseModelDir)
+    baseModelPath.mkdirs()
+    //创建BaseModel.java
+    def baseModelFile = new File(baseModelDir, baseName + "BaseModel.java")
+    if (!baseModelFile.exists()) {
+        baseModelFile.withPrintWriter { out -> baseModel(out, baseName, className, tableName, paramName, tableComment, fields) }
     }
+
 }
 
 def baseMapper(out, baseName, className, tableName, paramName, tableComment, fields) {
@@ -172,32 +180,13 @@ def baseMapper(out, baseName, className, tableName, paramName, tableComment, fie
     out.println "}"
 }
 
-def mapper(out, baseName, className, tableName, paramName, tableComment, fields) {
-    int index = 0
-    out.println "package ${packageName}.mapper;"
-    out.println ""
-    out.println "import ${packageName}.mapper.base.${baseName}BaseMapper;"
-    out.println "import ${packageName}.model.${className}Model;"
-    out.println "import ${packageName}.domain.Query${className}ListCondition;"
-    out.println "import ${packageName}.vo.Query${className}ListDTO;"
-    out.println "import org.springframework.stereotype.Repository;"
-    out.println ""
-    out.println "import java.util.List;"
+def baseModel(out, baseName, className, tableName, paramName, tableComment, fields) {
+    out.println "package ${packageName}.model.base;"
     out.println ""
     out.println "/**"
     out.println " * @author "
     out.println " */"
-    out.println "@Repository"
-    out.println "public interface ${className}Mapper extends ${baseName}BaseMapper<${className}Model> {"
-    out.println ""
-    out.println "    /**"
-    out.println "     * 自定义的分页条件查询${tableComment}列表"
-    out.println "     *"
-    out.println "     * @param condition"
-    out.println "     * @return"
-    out.println "     */"
-    out.println "    List<Query${className}ListDTO> defineQueryList(Query${className}ListCondition condition);"
-    out.println ""
+    out.println "public class ${baseName}BaseModel {"
     out.println "}"
 }
 
@@ -282,3 +271,4 @@ def tableName(str, capitalize) {
             .replaceAll(/[^\p{javaJavaIdentifierPart}[_]]/, "_")
     capitalize || s.length() == 1 ? s : Case.LOWER.apply(s[0]) + s[1..-1]
 }
+
