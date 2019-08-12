@@ -133,7 +133,7 @@ def generate(table, dir) {
     if (!paramFile.exists()) {
         paramFile.withPrintWriter { out -> domain(out, baseName, className, tableName, paramName, tableComment, fields) }
     }
-    //创建VO.java
+    创建VO.java
     def voFile = new File(voDir, "Query" + className + "ListVO.java")
     if (!voFile.exists()) {
         voFile.withPrintWriter { out -> vo(out, baseName, className, tableName, paramName, tableComment, fields) }
@@ -305,7 +305,6 @@ def model(out, baseName, className, tableName, paramName, tableComment, fields) 
             out.println ""
         }
     }
-    out.println ""
     out.println "}"
 }
 
@@ -626,7 +625,6 @@ def domain(out, baseName, className, tableName, paramName, tableComment, fields)
             out.println ""
         }
     }
-    out.println ""
     out.println "}"
 }
 
@@ -673,7 +671,6 @@ def vo(out, baseName, className, tableName, paramName, tableComment, fields) {
             out.println ""
         }
     }
-    out.println ""
     out.println "}"
 }
 
