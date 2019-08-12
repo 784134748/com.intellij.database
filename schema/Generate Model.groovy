@@ -142,6 +142,7 @@ def model(out, baseName, className, tableName, paramName, tableComment, fields) 
             out.println ""
         }
     }
+    out.println ""
     out.println "}"
 }
 

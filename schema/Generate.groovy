@@ -129,12 +129,12 @@ def generate(table, dir) {
     def voPath = new File(voDir)
     voPath.mkdirs()
     //创建Param.java
-    def paramFile = new File(domainDir, "Query" + className + "ListParam.java")
+    def paramFile = new File(domainDir, "Query" + className + "ListCondition.java")
     if (!paramFile.exists()) {
         paramFile.withPrintWriter { out -> domain(out, baseName, className, tableName, paramName, tableComment, fields) }
     }
-    创建VO.java
-    def voFile = new File(voDir, "Query" + className + "ListVO.java")
+    //创建VO.java
+    def voFile = new File(voDir, "Query" + className + "ListDTO.java")
     if (!voFile.exists()) {
         voFile.withPrintWriter { out -> vo(out, baseName, className, tableName, paramName, tableComment, fields) }
     }
@@ -230,17 +230,38 @@ def baseMapper(out, baseName, className, tableName, paramName, tableComment, fie
 }
 
 def mapper(out, baseName, className, tableName, paramName, tableComment, fields) {
+    int index = 0
     out.println "package ${packageName}.mapper;"
     out.println ""
     out.println "import ${packageName}.mapper.base.${baseName}BaseMapper;"
     out.println "import ${packageName}.model.${className}Model;"
+    out.println "import ${packageName}.domain.Query${className}ListCondition;"
+    out.println "import ${packageName}.vo.Query${className}ListDTO;"
     out.println "import org.springframework.stereotype.Repository;"
+    out.println ""
+    out.println "import java.util.List;"
     out.println ""
     out.println "/**"
     out.println " * @author "
     out.println " */"
     out.println "@Repository"
     out.println "public interface ${className}Mapper extends ${baseName}BaseMapper<${className}Model> {"
+    out.println ""
+    out.println "    /**"
+    out.println "     * 分页条件查询${tableComment}列表"
+    out.println "     *"
+    out.println "     * @param condition"
+    out.println "     * @return"
+    out.println "     */"
+    out.println "    List<Query${className}ListDTO> query${className}List(Query${className}ListCondition condition);"
+    out.println ""
+    out.println "    /**"
+    out.println "     * 分页条件查询${tableComment}列表汇总"
+    out.println "     *"
+    out.println "     * @param condition"
+    out.println "     * @return"
+    out.println "     */"
+    out.println "    Integer query${className}ListCount(Query${className}ListCondition condition);"
     out.println ""
     out.println "}"
 }
@@ -305,6 +326,7 @@ def model(out, baseName, className, tableName, paramName, tableComment, fields) 
             out.println ""
         }
     }
+    out.println ""
     out.println "}"
 }
 
@@ -594,37 +616,8 @@ def domain(out, baseName, className, tableName, paramName, tableComment, fields)
     out.println " */"
     out.println "@Data"
     out.println "@Builder"
-    out.println "public class Query${className}ListParam {"
+    out.println "public class Query${className}ListCondition {"
     out.println ""
-    fields.each() {
-        if (propertiesContainField(it, commonProperties)) {
-            if (it.commoent != "") {
-                out.println "    @ApiModelProperty(value = \"${it.comment}\", dataType = \"${it.javaType}\")"
-            }
-            if (it.annos != "") {
-                out.println "    ${it.annos}"
-            }
-            if (it.javaType.contains("java.time.")) {
-                out.println "    @DateTimeFormat(pattern = \"yyyy-MM-dd HH:mm:ss\")"
-                out.println "    @JsonFormat(pattern = \"yyyy-MM-dd HH:mm:ss\")"
-            }
-            out.println "    private ${it.javaType} ${it.javaName};"
-            out.println ""
-        } else {
-            if (it.commoent != "") {
-                out.println "    @ApiModelProperty(value = \"${it.comment}\", dataType = \"${it.javaType}\")"
-            }
-            if (it.annos != "") {
-                out.println "    ${it.annos}"
-            }
-            if (it.javaType.contains("java.time.")) {
-                out.println "    @DateTimeFormat(pattern = \"yyyy-MM-dd HH:mm:ss\")"
-                out.println "    @JsonFormat(pattern = \"yyyy-MM-dd HH:mm:ss\")"
-            }
-            out.println "    private ${it.javaType} ${it.javaName};"
-            out.println ""
-        }
-    }
     out.println "}"
 }
 
@@ -640,37 +633,8 @@ def vo(out, baseName, className, tableName, paramName, tableComment, fields) {
     out.println " * @author "
     out.println " */"
     out.println "@Data"
-    out.println "public class Query${className}ListVO {"
+    out.println "public class Query${className}ListDTO {"
     out.println ""
-    fields.each() {
-        if (propertiesContainField(it, commonProperties)) {
-            if (it.commoent != "") {
-                out.println "    @ApiModelProperty(value = \"${it.comment}\", dataType = \"${it.javaType}\")"
-            }
-            if (it.annos != "") {
-                out.println "    ${it.annos}"
-            }
-            if (it.javaType.contains("java.time.")) {
-                out.println "    @DateTimeFormat(pattern = \"yyyy-MM-dd HH:mm:ss\")"
-                out.println "    @JsonFormat(pattern = \"yyyy-MM-dd HH:mm:ss\")"
-            }
-            out.println "    private ${it.javaType} ${it.javaName};"
-            out.println ""
-        } else {
-            if (it.commoent != "") {
-                out.println "    @ApiModelProperty(value = \"${it.comment}\", dataType = \"${it.javaType}\")"
-            }
-            if (it.annos != "") {
-                out.println "    ${it.annos}"
-            }
-            if (it.javaType.contains("java.time.")) {
-                out.println "    @DateTimeFormat(pattern = \"yyyy-MM-dd HH:mm:ss\")"
-                out.println "    @JsonFormat(pattern = \"yyyy-MM-dd HH:mm:ss\")"
-            }
-            out.println "    private ${it.javaType} ${it.javaName};"
-            out.println ""
-        }
-    }
     out.println "}"
 }
 

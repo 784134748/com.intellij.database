@@ -74,11 +74,11 @@ def generate(table, dir) {
     def voPath = new File(voDir)
     voPath.mkdirs()
     //创建Param.java
-    def paramFile = new File(domainDir, "Query" + className + "ListParam.java")
+    def paramFile = new File(domainDir, "Query" + className + "ListCondition.java")
     if (!paramFile.exists()) {
         paramFile.withPrintWriter { out -> domain(out, baseName, className, tableName, paramName, tableComment, fields) }
     }
-    //创建DTO.java
+    //创建VO.java
     def voFile = new File(voDir, "Query" + className + "ListDTO.java")
     if (!voFile.exists()) {
         voFile.withPrintWriter { out -> vo(out, baseName, className, tableName, paramName, tableComment, fields) }
@@ -88,9 +88,6 @@ def generate(table, dir) {
 def domain(out, baseName, className, tableName, paramName, tableComment, fields) {
     out.println "package ${packageName}.domain;"
     out.println ""
-    out.println "import com.fasterxml.jackson.annotation.JsonFormat;"
-    out.println "import io.swagger.annotations.ApiModelProperty;"
-    out.println "import org.springframework.format.annotation.DateTimeFormat;"
     out.println "import lombok.*;"
     out.println ""
     out.println "/**"
@@ -98,37 +95,7 @@ def domain(out, baseName, className, tableName, paramName, tableComment, fields)
     out.println " */"
     out.println "@Data"
     out.println "@Builder"
-    out.println "public class Query${className}ListParam {"
-    out.println ""
-    fields.each() {
-        if (propertiesContainField(it, commonProperties)) {
-            if (it.commoent != "") {
-                out.println "    @ApiModelProperty(value = \"${it.comment}\", dataType = \"${it.javaType}\")"
-            }
-            if (it.annos != "") {
-                out.println "    ${it.annos}"
-            }
-            if (it.javaType.contains("java.time.")) {
-                out.println "    @DateTimeFormat(pattern = \"yyyy-MM-dd HH:mm:ss\")"
-                out.println "    @JsonFormat(pattern = \"yyyy-MM-dd HH:mm:ss\")"
-            }
-            out.println "    private ${it.javaType} ${it.javaName};"
-            out.println ""
-        } else {
-            if (it.commoent != "") {
-                out.println "    @ApiModelProperty(value = \"${it.comment}\", dataType = \"${it.javaType}\")"
-            }
-            if (it.annos != "") {
-                out.println "    ${it.annos}"
-            }
-            if (it.javaType.contains("java.time.")) {
-                out.println "    @DateTimeFormat(pattern = \"yyyy-MM-dd HH:mm:ss\")"
-                out.println "    @JsonFormat(pattern = \"yyyy-MM-dd HH:mm:ss\")"
-            }
-            out.println "    private ${it.javaType} ${it.javaName};"
-            out.println ""
-        }
-    }
+    out.println "public class Query${className}ListCondition {"
     out.println ""
     out.println "}"
 }
@@ -136,46 +103,14 @@ def domain(out, baseName, className, tableName, paramName, tableComment, fields)
 def vo(out, baseName, className, tableName, paramName, tableComment, fields) {
     out.println "package ${packageName}.vo;"
     out.println ""
-    out.println "import com.fasterxml.jackson.annotation.JsonFormat;"
-    out.println "import io.swagger.annotations.ApiModelProperty;"
-    out.println "import org.springframework.format.annotation.DateTimeFormat;"
     out.println "import lombok.*;"
     out.println ""
     out.println "/**"
     out.println " * @author "
     out.println " */"
     out.println "@Data"
-    out.println "public class Query${className}ListVO {"
+    out.println "public class Query${className}ListDTO {"
     out.println ""
-    fields.each() {
-        if (propertiesContainField(it, commonProperties)) {
-            if (it.commoent != "") {
-                out.println "    @ApiModelProperty(value = \"${it.comment}\", dataType = \"${it.javaType}\")"
-            }
-            if (it.annos != "") {
-                out.println "    ${it.annos}"
-            }
-            if (it.javaType.contains("java.time.")) {
-                out.println "    @DateTimeFormat(pattern = \"yyyy-MM-dd HH:mm:ss\")"
-                out.println "    @JsonFormat(pattern = \"yyyy-MM-dd HH:mm:ss\")"
-            }
-            out.println "    private ${it.javaType} ${it.javaName};"
-            out.println ""
-        } else {
-            if (it.commoent != "") {
-                out.println "    @ApiModelProperty(value = \"${it.comment}\", dataType = \"${it.javaType}\")"
-            }
-            if (it.annos != "") {
-                out.println "    ${it.annos}"
-            }
-            if (it.javaType.contains("java.time.")) {
-                out.println "    @DateTimeFormat(pattern = \"yyyy-MM-dd HH:mm:ss\")"
-                out.println "    @JsonFormat(pattern = \"yyyy-MM-dd HH:mm:ss\")"
-            }
-            out.println "    private ${it.javaType} ${it.javaName};"
-            out.println ""
-        }
-    }
     out.println "}"
 }
 
