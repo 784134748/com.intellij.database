@@ -18,7 +18,8 @@ idProperties = ["id"] as String[]
 gmtCreate = ["gmt_create"] as String[]
 gmtModified = ["gmt_modified"] as String[]
 isDeleteProperties = ["is_delete"] as String[]
-delete = 1
+delete = 0
+not_delete = 1
 commonProperties = ["id", "gmt_create", "gmt_modified"] as String[]
 javaTypeMapping = [
         (~/(?i)bigint/)                   : "Long",
@@ -100,10 +101,8 @@ def xml(out, baseName, className, tableName, paramName, tableComment, fields) {
      */
 
     out.println ""
-    out.println "    <select id='defineQueryList' resultMap='BaseResultMap'"
-    out.println "            parameterType='${packageName}.domain.Query${className}ListCondition'>"
+    out.println "    <select id='defineQueryList' resultType='${packageName}.vo.Query${className}ListDTO' parameterType='${packageName}.domain.Query${className}ListCondition'>"
     out.println "    </select>"
-
     out.println ""
     out.println "</mapper>"
 }
@@ -296,7 +295,7 @@ def replace(reader, out, baseName, className, tableName, paramName, tableComment
                     } else if (propertiesContainField(it, gmtModified)) {
                         out.println "            now(),"
                     } else if (propertiesContainField(it, isDeleteProperties)) {
-                        out.println "            0,"
+                        out.println "            ${not_delete},"
                     } else {
                         out.println "            <if test='${it.javaName} != null'>#{${it.javaName}},</if>"
                     }
