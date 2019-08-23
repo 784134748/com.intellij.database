@@ -481,7 +481,7 @@ def replace(reader, out, baseName, className, tableName, paramName, tableComment
                 out.println "    <sql id='query_filter'>"
                 fields.each() {
                     if (propertiesContainField(it, isDeleteProperties)) {
-                        out.println "        and ${tableName}.`${it.colName}` != ${delete}"
+                        out.println "        and ${tableName}.`${it.colName}` = ${not_delete}"
                     } else {
                         out.println "        <if test='t.${it.javaName} != null'>and ${tableName}.`${it.colName}` = #{t.${it.javaName}}</if>"
                     }
