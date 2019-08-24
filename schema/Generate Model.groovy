@@ -105,7 +105,8 @@ def model(out, baseName, className, tableName, paramName, tableComment, fields) 
     out.println "/**"
     out.println " * @author "
     out.println " */"
-    out.println "@Data"
+    out.println "@Getter"
+    out.println "@Setter"
     out.println "@Builder"
     out.println "@NoArgsConstructor"
     out.println "@AllArgsConstructor"
@@ -143,7 +144,6 @@ def model(out, baseName, className, tableName, paramName, tableComment, fields) 
             out.println ""
         }
     }
-    out.println ""
     out.println "}"
 }
 
