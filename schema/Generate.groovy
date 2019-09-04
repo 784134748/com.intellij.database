@@ -26,7 +26,8 @@ commonProperties = ["id", "gmt_create", "gmt_modified"] as String[]
 javaTypeMapping = [
         (~/(?i)bigint/)                   : "Long",
         (~/(?i)int|timestamp/)            : "Integer",
-        (~/(?i)float|double|decimal|real/): "Double",
+        (~/(?i)float|double|real/)        : "java.lang.Double",
+        (~/(?i)decimal/)                  : "java.math.BigDecimal",
         (~/(?i)datetime/)                 : "java.time.LocalDateTime",
         (~/(?i)date/)                     : "java.time.LocalDate",
         (~/(?i)time/)                     : "java.time.LocalTime",
@@ -37,7 +38,8 @@ javaTypeMapping = [
 parameterTypeMapping = [
         (~/(?i)bigint/)                   : "java.lang.Long",
         (~/(?i)int|timestamp/)            : "java.lang.Integer",
-        (~/(?i)float|double|decimal|real/): "java.lang.Double",
+        (~/(?i)float|double|real/)        : "java.lang.Double",
+        (~/(?i)decimal/)                  : "java.math.BigDecimal",
         (~/(?i)datetime/)                 : "java.time.LocalDateTime",
         (~/(?i)date/)                     : "java.time.LocalDate",
         (~/(?i)time/)                     : "java.time.LocalTime",
