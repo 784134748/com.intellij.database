@@ -111,52 +111,22 @@ def generate(table, dir) {
         xmlFileTmp.renameTo(xmlFile)
     }
 
-
-    //创建domain文件夹
-    def domainDir = dir.toString() + sepa + "domain" + sepa
-    def domainPath = new File(domainDir)
-    domainPath.mkdirs()
-    //创建vo文件夹
-    def voDir = dir.toString() + sepa + "vo" + sepa
-    def voPath = new File(voDir)
-    voPath.mkdirs()
-    //创建Param.java
-    def paramFile = new File(domainDir, "Query" + className + "ListCondition.java")
-    if (!paramFile.exists()) {
-        paramFile.withPrintWriter { out -> domain(out, baseName, className, tableName, paramName, tableComment, fields) }
-    }
-    //创建VO.java
-    def voFile = new File(voDir, "Query" + className + "ListDTO.java")
-    if (!voFile.exists()) {
-        voFile.withPrintWriter { out -> vo(out, baseName, className, tableName, paramName, tableComment, fields) }
-    }
 }
 
 def mapper(out, baseName, className, tableName, paramName, tableComment, fields) {
-    int index = 0
     out.println "package ${packageName}.mapper;"
     out.println ""
     out.println "import ${baseMapprePath};"
     out.println "import ${packageName}.model.${className}Model;"
-    out.println "import ${packageName}.domain.Query${className}ListCondition;"
-    out.println "import ${packageName}.vo.Query${className}ListDTO;"
-    out.println "import org.springframework.stereotype.Repository;"
+    out.println "import org.apache.ibatis.annotations.Mapper;"
     out.println ""
     out.println "import java.util.List;"
     out.println ""
     out.println "/**"
     out.println " * @author "
     out.println " */"
-    out.println "@Repository"
+    out.println "@Mapper"
     out.println "public interface ${className}Mapper extends ${baseName}BaseMapper<${className}Model> {"
-    out.println ""
-    out.println "    /**"
-    out.println "     * 自定义的分页条件查询${tableComment}列表"
-    out.println "     *"
-    out.println "     * @param condition"
-    out.println "     * @return"
-    out.println "     */"
-    out.println "    List<Query${className}ListDTO> defineQueryList(Query${className}ListCondition condition);"
     out.println ""
     out.println "}"
 }
@@ -176,8 +146,7 @@ def model(out, baseName, className, tableName, paramName, tableComment, fields) 
     out.println "/**"
     out.println " * @author "
     out.println " */"
-    out.println "@Getter"
-    out.println "@Setter"
+    out.println "@Data"
     out.println "@Builder"
     out.println "@NoArgsConstructor"
     out.println "@AllArgsConstructor"
@@ -225,14 +194,6 @@ def xml(out, baseName, className, tableName, paramName, tableComment, fields) {
     out.println ""
     out.println "    <!--一串华丽的分割线,分割线内禁止任何形式的修改-->"
     out.println "    <!--一串华丽的分割线,分割线内禁止任何形式的修改-->"
-
-    /**
-     * defineQueryList
-     */
-
-    out.println ""
-    out.println "    <select id='defineQueryList' resultType='${packageName}.vo.Query${className}ListDTO' parameterType='${packageName}.domain.Query${className}ListCondition'>"
-    out.println "    </select>"
     out.println ""
     out.println "</mapper>"
 }
@@ -497,40 +458,6 @@ def replace(reader, out, baseName, className, tableName, paramName, tableComment
             time += 1
         }
     }
-}
-
-def domain(out, baseName, className, tableName, paramName, tableComment, fields) {
-    out.println "package ${packageName}.domain;"
-    out.println ""
-    out.println "import lombok.*;"
-    out.println ""
-    out.println "/**"
-    out.println " * @author "
-    out.println " */"
-    out.println "@Getter"
-    out.println "@Setter"
-    out.println "@Builder"
-    out.println "public class Query${className}ListCondition {"
-    out.println ""
-    out.println "}"
-}
-
-def vo(out, baseName, className, tableName, paramName, tableComment, fields) {
-    out.println "package ${packageName}.vo;"
-    out.println ""
-    out.println "import com.fasterxml.jackson.annotation.JsonFormat;"
-    out.println "import io.swagger.annotations.ApiModelProperty;"
-    out.println "import org.springframework.format.annotation.DateTimeFormat;"
-    out.println "import lombok.*;"
-    out.println ""
-    out.println "/**"
-    out.println " * @author "
-    out.println " */"
-    out.println "@Getter"
-    out.println "@Setter"
-    out.println "public class Query${className}ListDTO {"
-    out.println ""
-    out.println "}"
 }
 
 boolean fieldsContainProperties(properties, fields) {

@@ -183,14 +183,14 @@ def mapper(out, baseName, className, tableName, paramName, tableComment, fields)
     out.println "import ${packageName}.model.${className}Model;"
     out.println "import ${packageName}.domain.Query${className}ListCondition;"
     out.println "import ${packageName}.vo.Query${className}ListDTO;"
-    out.println "import org.springframework.stereotype.Repository;"
+    out.println "import org.apache.ibatis.annotations.Mapper;"
     out.println ""
     out.println "import java.util.List;"
     out.println ""
     out.println "/**"
     out.println " * @author "
     out.println " */"
-    out.println "@Repository"
+    out.println "@Mapper"
     out.println "public interface ${className}Mapper extends ${baseName}BaseMapper<${className}Model> {"
     out.println ""
     out.println "    /**"
@@ -203,6 +203,8 @@ def mapper(out, baseName, className, tableName, paramName, tableComment, fields)
     out.println ""
     out.println "}"
 }
+
+
 
 boolean fieldsContainProperties(properties, fields) {
     def exist = false
