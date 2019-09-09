@@ -152,6 +152,7 @@ def model(out, baseName, className, tableName, paramName, tableComment, fields) 
     out.println "@Builder"
     out.println "@NoArgsConstructor"
     out.println "@AllArgsConstructor"
+    out.println "@EqualsAndHashCode(callSuper = true)"
     out.println "@ApiModel(value = \"${className}Model\", description = \"${tableComment}\")"
     out.println "public class ${className}Model extends ${baseName}BaseModel implements Serializable {"
     out.println ""
