@@ -22,27 +22,27 @@ delete = 0
 not_delete = 1
 commonProperties = ["id", "gmt_create", "gmt_modified"] as String[]
 javaTypeMapping = [
-        (~/(?i)bigint/)                   : "Long",
-        (~/(?i)int|timestamp/)            : "Integer",
-        (~/(?i)float|double|real/)        : "java.lang.Double",
-        (~/(?i)decimal/)                  : "java.math.BigDecimal",
-        (~/(?i)datetime/)                 : "java.time.LocalDateTime",
-        (~/(?i)date/)                     : "java.time.LocalDate",
-        (~/(?i)time/)                     : "java.time.LocalTime",
-        (~/(?i)json/)                     : "String",
-        (~/(?i)/)                         : "String"
+        (~/(?i)bigint/)           : "Long",
+        (~/(?i)int|timestamp/)    : "Integer",
+        (~/(?i)float|double|real/): "java.lang.Double",
+        (~/(?i)decimal/)          : "java.math.BigDecimal",
+        (~/(?i)datetime/)         : "java.time.LocalDateTime",
+        (~/(?i)date/)             : "java.time.LocalDate",
+        (~/(?i)time/)             : "java.time.LocalTime",
+        (~/(?i)json/)             : "String",
+        (~/(?i)/)                 : "String"
 ]
 
 parameterTypeMapping = [
-        (~/(?i)bigint/)                   : "java.lang.Long",
-        (~/(?i)int|timestamp/)            : "java.lang.Integer",
-        (~/(?i)float|double|real/)        : "java.lang.Double",
-        (~/(?i)decimal/)                  : "java.math.BigDecimal",
-        (~/(?i)datetime/)                 : "java.time.LocalDateTime",
-        (~/(?i)date/)                     : "java.time.LocalDate",
-        (~/(?i)time/)                     : "java.time.LocalTime",
-        (~/(?i)json/)                     : "java.lang.String",
-        (~/(?i)/)                         : "java.lang.String"
+        (~/(?i)bigint/)           : "java.lang.Long",
+        (~/(?i)int|timestamp/)    : "java.lang.Integer",
+        (~/(?i)float|double|real/): "java.lang.Double",
+        (~/(?i)decimal/)          : "java.math.BigDecimal",
+        (~/(?i)datetime/)         : "java.time.LocalDateTime",
+        (~/(?i)date/)             : "java.time.LocalDate",
+        (~/(?i)time/)             : "java.time.LocalTime",
+        (~/(?i)json/)             : "java.lang.String",
+        (~/(?i)/)                 : "java.lang.String"
 ]
 
 
@@ -184,6 +184,7 @@ def mapper(out, baseName, className, tableName, paramName, tableComment, fields)
     out.println "import ${packageName}.domain.Query${className}ListCondition;"
     out.println "import ${packageName}.vo.Query${className}ListDTO;"
     out.println "import org.apache.ibatis.annotations.Mapper;"
+    out.println "import org.springframework.stereotype.Repository;"
     out.println ""
     out.println "import java.util.List;"
     out.println ""
@@ -191,6 +192,7 @@ def mapper(out, baseName, className, tableName, paramName, tableComment, fields)
     out.println " * @author "
     out.println " */"
     out.println "@Mapper"
+    out.println "@Repository"
     out.println "public interface ${className}Mapper extends ${baseName}BaseMapper<${className}Model> {"
     out.println ""
     out.println "    /**"
@@ -203,7 +205,6 @@ def mapper(out, baseName, className, tableName, paramName, tableComment, fields)
     out.println ""
     out.println "}"
 }
-
 
 
 boolean fieldsContainProperties(properties, fields) {
