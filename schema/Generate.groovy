@@ -14,14 +14,14 @@ import java.util.regex.Pattern
 
 packageName = ""
 basePackageName = ""
-baseMapprePath = "com.aidynamic.igrow.core.base.BaseMapper"
-baseModePath = "com.aidynamic.igrow.core.base.BaseModel"
+baseMapprePath = "com.aidynamic.tj.core.base.BaseMapper"
+baseModePath = "com.aidynamic.tj.core.base.BaseModel"
 idProperties = ["id"] as String[]
 gmtCreate = ["gmt_create"] as String[]
 gmtModified = ["gmt_modified"] as String[]
 isDeleteProperties = ["is_delete"] as String[]
-delete = 0
-not_delete = 1
+delete = 1
+not_delete = 0
 commonProperties = ["id", "gmt_create", "gmt_modified"] as String[]
 javaTypeMapping = [
         (~/(?i)bigint/)                   : "Long",
@@ -166,9 +166,17 @@ def model(out, baseName, className, tableName, paramName, tableComment, fields) 
             if (it.annos != "") {
                 out.println "    ${it.annos}"
             }
-            if (it.javaType.contains("java.time.")) {
+            if (it.javaType.contains("java.time.LocalDateTime")) {
                 out.println "    @DateTimeFormat(pattern = \"yyyy-MM-dd HH:mm:ss\")"
                 out.println "    @JsonFormat(pattern = \"yyyy-MM-dd HH:mm:ss\")"
+            }
+            if (it.javaType.contains("java.time.LocalDate")) {
+                out.println "    @DateTimeFormat(pattern = \"yyyy-MM-dd\")"
+                out.println "    @JsonFormat(pattern = \"yyyy-MM-dd\")"
+            }
+            if (it.javaType.contains("java.time.LocalTime")) {
+                out.println "    @DateTimeFormat(pattern = \"HH:mm:ss\")"
+                out.println "    @JsonFormat(pattern = \"HH:mm:ss\")"
             }
             out.println "    private ${it.javaType} ${it.javaName};"
             out.println ""
@@ -179,9 +187,17 @@ def model(out, baseName, className, tableName, paramName, tableComment, fields) 
             if (it.annos != "") {
                 out.println "    ${it.annos}"
             }
-            if (it.javaType.contains("java.time.")) {
+            if (it.javaType.contains("java.time.LocalDateTime")) {
                 out.println "    @DateTimeFormat(pattern = \"yyyy-MM-dd HH:mm:ss\")"
                 out.println "    @JsonFormat(pattern = \"yyyy-MM-dd HH:mm:ss\")"
+            }
+            if (it.javaType.contains("java.time.LocalDate")) {
+                out.println "    @DateTimeFormat(pattern = \"yyyy-MM-dd\")"
+                out.println "    @JsonFormat(pattern = \"yyyy-MM-dd\")"
+            }
+            if (it.javaType.contains("java.time.LocalTime")) {
+                out.println "    @DateTimeFormat(pattern = \"HH:mm:ss\")"
+                out.println "    @JsonFormat(pattern = \"HH:mm:ss\")"
             }
             out.println "    private ${it.javaType} ${it.javaName};"
             out.println ""
