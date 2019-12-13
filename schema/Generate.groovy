@@ -166,15 +166,15 @@ def model(out, baseName, className, tableName, paramName, tableComment, fields) 
             if (it.annos != "") {
                 out.println "    ${it.annos}"
             }
-            if (it.javaType.contains("java.time.LocalDateTime")) {
+            if (it.javaType.equals("java.time.LocalDateTime")) {
                 out.println "    @DateTimeFormat(pattern = \"yyyy-MM-dd HH:mm:ss\")"
                 out.println "    @JsonFormat(pattern = \"yyyy-MM-dd HH:mm:ss\")"
             }
-            if (it.javaType.contains("java.time.LocalDate")) {
+            if (it.javaType.equals("java.time.LocalDate")) {
                 out.println "    @DateTimeFormat(pattern = \"yyyy-MM-dd\")"
                 out.println "    @JsonFormat(pattern = \"yyyy-MM-dd\")"
             }
-            if (it.javaType.contains("java.time.LocalTime")) {
+            if (it.javaType.equals("java.time.LocalTime")) {
                 out.println "    @DateTimeFormat(pattern = \"HH:mm:ss\")"
                 out.println "    @JsonFormat(pattern = \"HH:mm:ss\")"
             }
@@ -187,15 +187,15 @@ def model(out, baseName, className, tableName, paramName, tableComment, fields) 
             if (it.annos != "") {
                 out.println "    ${it.annos}"
             }
-            if (it.javaType.contains("java.time.LocalDateTime")) {
+            if (it.javaType.equals("java.time.LocalDateTime")) {
                 out.println "    @DateTimeFormat(pattern = \"yyyy-MM-dd HH:mm:ss\")"
                 out.println "    @JsonFormat(pattern = \"yyyy-MM-dd HH:mm:ss\")"
             }
-            if (it.javaType.contains("java.time.LocalDate")) {
+            if (it.javaType.equals("java.time.LocalDate")) {
                 out.println "    @DateTimeFormat(pattern = \"yyyy-MM-dd\")"
                 out.println "    @JsonFormat(pattern = \"yyyy-MM-dd\")"
             }
-            if (it.javaType.contains("java.time.LocalTime")) {
+            if (it.javaType.equals("java.time.LocalTime")) {
                 out.println "    @DateTimeFormat(pattern = \"HH:mm:ss\")"
                 out.println "    @JsonFormat(pattern = \"HH:mm:ss\")"
             }
