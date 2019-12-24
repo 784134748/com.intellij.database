@@ -22,29 +22,40 @@ gmtModified = ["gmt_modified"] as String[]
 isDeleteProperties = ["is_delete"] as String[]
 delete = 1
 not_delete = 0
-commonProperties = ["id", "gmt_create", "gmt_modified"] as String[]
 javaTypeMapping = [
-        (~/(?i)bigint/)                   : "Long",
-        (~/(?i)int|timestamp/)            : "Integer",
-        (~/(?i)float|double|real/)        : "java.lang.Double",
-        (~/(?i)decimal/)                  : "java.math.BigDecimal",
-        (~/(?i)datetime/)                 : "java.time.LocalDateTime",
-        (~/(?i)date/)                     : "java.time.LocalDate",
-        (~/(?i)time/)                     : "java.time.LocalTime",
-        (~/(?i)json/)                     : "String",
-        (~/(?i)/)                         : "String"
+        (~/(?i)bigint/)           : "Long",
+        (~/(?i)int|timestamp/)    : "Integer",
+        (~/(?i)float|double|real/): "java.lang.Double",
+        (~/(?i)decimal/)          : "java.math.BigDecimal",
+        (~/(?i)datetime/)         : "java.time.LocalDateTime",
+        (~/(?i)date/)             : "java.time.LocalDate",
+        (~/(?i)time/)             : "java.time.LocalTime",
+        (~/(?i)json/)             : "String",
+        (~/(?i)/)                 : "String"
 ]
 
 parameterTypeMapping = [
-        (~/(?i)bigint/)                   : "java.lang.Long",
-        (~/(?i)int|timestamp/)            : "java.lang.Integer",
-        (~/(?i)float|double|real/)        : "java.lang.Double",
-        (~/(?i)decimal/)                  : "java.math.BigDecimal",
-        (~/(?i)datetime/)                 : "java.time.LocalDateTime",
-        (~/(?i)date/)                     : "java.time.LocalDate",
-        (~/(?i)time/)                     : "java.time.LocalTime",
-        (~/(?i)json/)                     : "java.lang.String",
-        (~/(?i)/)                         : "java.lang.String"
+        (~/(?i)bigint/)           : "java.lang.Long",
+        (~/(?i)int|timestamp/)    : "java.lang.Integer",
+        (~/(?i)float|double|real/): "java.lang.Double",
+        (~/(?i)decimal/)          : "java.math.BigDecimal",
+        (~/(?i)datetime/)         : "java.time.LocalDateTime",
+        (~/(?i)date/)             : "java.time.LocalDate",
+        (~/(?i)time/)             : "java.time.LocalTime",
+        (~/(?i)json/)             : "java.lang.String",
+        (~/(?i)/)                 : "java.lang.String"
+]
+
+dataTypeMapping = [
+        (~/(?i)bigint/)           : "Long",
+        (~/(?i)int|timestamp/)    : "Integer",
+        (~/(?i)float|double|real/): "Double",
+        (~/(?i)decimal/)          : "BigDecimal",
+        (~/(?i)datetime/)         : "LocalDateTime",
+        (~/(?i)date/)             : "LocalDate",
+        (~/(?i)time/)             : "LocalTime",
+        (~/(?i)json/)             : "String",
+        (~/(?i)/)                 : "String"
 ]
 
 
@@ -159,49 +170,23 @@ def model(out, baseName, className, tableName, paramName, tableComment, fields) 
     out.println "    public static final long serialVersionUID = 1L;"
     out.println ""
     fields.each() {
-        if (propertiesContainField(it, commonProperties)) {
-            if (it.commoent != "") {
-                out.println "    @ApiModelProperty(value = \"${it.comment}\", dataType = \"${it.javaType}\", hidden = true)"
-            }
-            if (it.annos != "") {
-                out.println "    ${it.annos}"
-            }
-            if (it.javaType.equals("java.time.LocalDateTime")) {
-                out.println "    @DateTimeFormat(pattern = \"yyyy-MM-dd HH:mm:ss\")"
-                out.println "    @JsonFormat(pattern = \"yyyy-MM-dd HH:mm:ss\")"
-            }
-            if (it.javaType.equals("java.time.LocalDate")) {
-                out.println "    @DateTimeFormat(pattern = \"yyyy-MM-dd\")"
-                out.println "    @JsonFormat(pattern = \"yyyy-MM-dd\")"
-            }
-            if (it.javaType.equals("java.time.LocalTime")) {
-                out.println "    @DateTimeFormat(pattern = \"HH:mm:ss\")"
-                out.println "    @JsonFormat(pattern = \"HH:mm:ss\")"
-            }
-            out.println "    private ${it.javaType} ${it.javaName};"
-            out.println ""
+        if (it.javaType.equals("java.time.LocalDateTime")) {
+            out.println "    @ApiModelProperty(value = \"${it.comment}\", dataType = \"${it.dataType}\", example = \"2019-10-01 00:00:00\")"
+            out.println "    @DateTimeFormat(pattern = \"yyyy-MM-dd HH:mm:ss\")"
+            out.println "    @JsonFormat(pattern = \"yyyy-MM-dd HH:mm:ss\")"
+        } else if (it.javaType.equals("java.time.LocalDate")) {
+            out.println "    @ApiModelProperty(value = \"${it.comment}\", dataType = \"${it.dataType}\", example = \"2019-10-01\")"
+            out.println "    @DateTimeFormat(pattern = \"yyyy-MM-dd\")"
+            out.println "    @JsonFormat(pattern = \"yyyy-MM-dd\")"
+        } else if (it.javaType.equals("java.time.LocalTime")) {
+            out.println "    @ApiModelProperty(value = \"${it.comment}\", dataType = \"${it.dataType}\", example = \"00:00:00\")"
+            out.println "    @DateTimeFormat(pattern = \"HH:mm:ss\")"
+            out.println "    @JsonFormat(pattern = \"HH:mm:ss\")"
         } else {
-            if (it.commoent != "") {
-                out.println "    @ApiModelProperty(value = \"${it.comment}\", dataType = \"${it.javaType}\")"
-            }
-            if (it.annos != "") {
-                out.println "    ${it.annos}"
-            }
-            if (it.javaType.equals("java.time.LocalDateTime")) {
-                out.println "    @DateTimeFormat(pattern = \"yyyy-MM-dd HH:mm:ss\")"
-                out.println "    @JsonFormat(pattern = \"yyyy-MM-dd HH:mm:ss\")"
-            }
-            if (it.javaType.equals("java.time.LocalDate")) {
-                out.println "    @DateTimeFormat(pattern = \"yyyy-MM-dd\")"
-                out.println "    @JsonFormat(pattern = \"yyyy-MM-dd\")"
-            }
-            if (it.javaType.equals("java.time.LocalTime")) {
-                out.println "    @DateTimeFormat(pattern = \"HH:mm:ss\")"
-                out.println "    @JsonFormat(pattern = \"HH:mm:ss\")"
-            }
-            out.println "    private ${it.javaType} ${it.javaName};"
-            out.println ""
+            out.println "    @ApiModelProperty(value = \"${it.comment}\", dataType = \"${it.dataType}\")"
         }
+        out.println "    private ${it.javaType} ${it.javaName};"
+        out.println ""
     }
     out.println "}"
 }
@@ -507,6 +492,7 @@ def calcFields(table) {
         def spec = Case.LOWER.apply(col.getDataType().getSpecification())
         def javaTypeStr = javaTypeMapping.find { p, t -> p.matcher(spec).find() }.value
         def parameterTypeStr = parameterTypeMapping.find { p, t -> p.matcher(spec).find() }.value
+        def dataTypeStr = dataTypeMapping.find { p, t -> p.matcher(spec).find() }.value
         fields += [[
                            javaName     : javaName(col.getName(), false),
                            colName      : col.getName(),
@@ -514,8 +500,9 @@ def calcFields(table) {
                            jdbcType     : jdbcType(col.getDataType()),
                            javaType     : javaTypeStr,
                            parameterType: parameterTypeStr,
-                           comment      : col.getComment(),
-                           annos        : ""]]
+                           dataType     : dataTypeStr,
+                           comment      : col.getComment()
+                   ]]
     }
 }
 
