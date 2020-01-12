@@ -271,6 +271,21 @@ def replace(reader, out, baseName, className, tableName, paramName, tableComment
                 out.println "    </select>"
 
                 /**
+                 * batchSelectByPrimaryKey
+                 */
+
+                out.println ""
+                out.println "    <select id='batchSelectByPrimaryKey' resultMap='BaseResultMap' parameterType='ArrayList'>"
+                out.println "        select "
+                out.println "        <include refid='Base_Column_List'/>"
+                out.println "        from ${tableName} "
+                out.println "        where ${tableName}.`id` in"
+                out.println "        <foreach collection='list' item='id' index='index' open='(' close=')' separator=','>"
+                out.println "            #{id}"
+                out.println "        </foreach>"
+                out.println "    </select>"
+
+                /**
                  * selectOneByQuery
                  */
 
