@@ -483,6 +483,7 @@ def replace(reader, out, baseName, className, tableName, paramName, tableComment
                         out.println "            `${it.colName}` = #{${it.javaName}},"
                     }
                 }
+                out.println "        </set>"
                 out.println "        <where>"
                 out.println "            <choose>"
                 out.println "                <when test='id != null'>"
