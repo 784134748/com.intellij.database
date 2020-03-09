@@ -266,8 +266,17 @@ def replace(reader, out, baseName, className, tableName, paramName, tableComment
                 }
                 out.println "        select "
                 out.println "        <include refid='Base_Column_List'/>"
-                out.println "        from ${tableName} "
-                out.println "        where ${tableName}.`id` = #{id}"
+                out.println "        from ${tableName}"
+                out.println "        <where>"
+                out.println "            <choose>"
+                out.println "                <when test='id != null'>"
+                out.println "                     ${tableName}.`id` = #{id}"
+                out.println "                </when>"
+                out.println "                <otherwise>"
+                out.println "                    1!=1"
+                out.println "                </otherwise>"
+                out.println "            </choose>"
+                out.println "        </where>"
                 out.println "    </select>"
 
                 /**
@@ -279,10 +288,43 @@ def replace(reader, out, baseName, className, tableName, paramName, tableComment
                 out.println "        select "
                 out.println "        <include refid='Base_Column_List'/>"
                 out.println "        from ${tableName} "
-                out.println "        where ${tableName}.`id` in"
-                out.println "        <foreach collection='list' item='id' index='index' open='(' close=')' separator=','>"
-                out.println "            #{id}"
-                out.println "        </foreach>"
+                out.println "        <where>"
+                out.println "            <choose>"
+                out.println "                <when test='ids != null and ids.length&gt;0'>"
+                out.println "                    ${tableName}.`id` in"
+                out.println "                    <foreach collection='ids' item='id' index='index' open='(' close=')' separator=','>"
+                out.println "                        #{id}"
+                out.println "                    </foreach>"
+                out.println "                </when>"
+                out.println "                <otherwise>"
+                out.println "                    1!=1"
+                out.println "                </otherwise>"
+                out.println "            </choose>"
+                out.println "        </where>"
+                out.println "    </select>"
+
+                /**
+                 * batchSelectByUniverses
+                 */
+
+                out.println ""
+                out.println "    <select id='batchSelectByUniverse' resultMap='BaseResultMap' parameterType='ArrayList'>"
+                out.println "        select "
+                out.println "        <include refid='Base_Column_List'/>"
+                out.println "        from ${tableName} "
+                out.println "        <where>"
+                out.println "            <choose>"
+                out.println "                <when test='universes != null and universes.length&gt;0'>"
+                out.println "                    ${tableName}.`universe` in"
+                out.println "                    <foreach collection='universes' item='universe' index='index' open='(' close=')' separator=','>"
+                out.println "                        #{universe}"
+                out.println "                    </foreach>"
+                out.println "                </when>"
+                out.println "                <otherwise>"
+                out.println "                    1!=1"
+                out.println "                </otherwise>"
+                out.println "            </choose>"
+                out.println "        </where>"
                 out.println "    </select>"
 
                 /**
@@ -338,7 +380,17 @@ def replace(reader, out, baseName, className, tableName, paramName, tableComment
                             out.println "    <delete id='deleteByPrimaryKey' parameterType='${it.parameterType}'>"
                         }
                     }
-                    out.println "        delete from ${tableName} where ${tableName}.`id` = #{id}"
+                    out.println "        delete from ${tableName}"
+                    out.println "        <where>"
+                    out.println "            <choose>"
+                    out.println "                <when test='id != null'>"
+                    out.println "                     ${tableName}.`id` = #{id}"
+                    out.println "                </when>"
+                    out.println "                <otherwise>"
+                    out.println "                    1!=1"
+                    out.println "                </otherwise>"
+                    out.println "            </choose>"
+                    out.println "        </where>"
                     out.println "    </delete>"
                 }
 
@@ -356,6 +408,7 @@ def replace(reader, out, baseName, className, tableName, paramName, tableComment
                     out.println "    </update>"
                     out.println ""
                 } else {
+                    out.println ""
                     out.println "    <delete id='deleteByQuery' parameterType='${packageName}.model.${className}Model'>"
                     out.println "        delete from ${tableName}"
                     out.println "        <where>"
@@ -431,7 +484,16 @@ def replace(reader, out, baseName, className, tableName, paramName, tableComment
                     }
                 }
                 out.println "        </set>"
-                out.println "        where ${tableName}.id = #{id}"
+                out.println "        <where>"
+                out.println "            <choose>"
+                out.println "                <when test='id != null'>"
+                out.println "                     ${tableName}.`id` = #{id}"
+                out.println "                </when>"
+                out.println "                <otherwise>"
+                out.println "                    1!+=1"
+                out.println "                </otherwise>"
+                out.println "            </choose>"
+                out.println "        </where>"
                 out.println "    </update>"
 
                 /**
@@ -452,7 +514,16 @@ def replace(reader, out, baseName, className, tableName, paramName, tableComment
                     }
                 }
                 out.println "        </set>"
-                out.println "        where ${tableName}.`id` = #{id}"
+                out.println "        <where>"
+                out.println "            <choose>"
+                out.println "                <when test='id != null'>"
+                out.println "                     ${tableName}.`id` = #{id}"
+                out.println "                </when>"
+                out.println "                <otherwise>"
+                out.println "                    1!+=1"
+                out.println "                </otherwise>"
+                out.println "            </choose>"
+                out.println "        </where>"
                 out.println "    </update>"
 
                 /**
