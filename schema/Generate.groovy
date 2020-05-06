@@ -247,7 +247,7 @@ def replace(reader, out, baseName, className, tableName, paramName, tableComment
                     if (index != 0) {
                         out.print ", "
                     }
-                    out.print "${tableName}.`${it.colName}`"
+                    out.print "`${tableName}`.`${it.colName}`"
                     index++
                 }
                 out.println ""
@@ -266,11 +266,11 @@ def replace(reader, out, baseName, className, tableName, paramName, tableComment
                 }
                 out.println "        select "
                 out.println "        <include refid='Base_Column_List'/>"
-                out.println "        from ${tableName}"
+                out.println "        from `${tableName}`"
                 out.println "        <where>"
                 out.println "            <choose>"
                 out.println "                <when test='id != null'>"
-                out.println "                     ${tableName}.`id` = #{id}"
+                out.println "                     `${tableName}`.`id` = #{id}"
                 out.println "                </when>"
                 out.println "                <otherwise>"
                 out.println "                    1 != 1"
@@ -287,11 +287,11 @@ def replace(reader, out, baseName, className, tableName, paramName, tableComment
                 out.println "    <select id='batchSelectByPrimaryKey' resultMap='BaseResultMap' parameterType='ArrayList'>"
                 out.println "        select "
                 out.println "        <include refid='Base_Column_List'/>"
-                out.println "        from ${tableName} "
+                out.println "        from `${tableName}` "
                 out.println "        <where>"
                 out.println "            <choose>"
                 out.println "                <when test='ids != null and ids.length&gt;0'>"
-                out.println "                    ${tableName}.`id` in"
+                out.println "                    `${tableName}`.`id` in"
                 out.println "                    <foreach collection='ids' item='id' index='index' open='(' close=')' separator=','>"
                 out.println "                        #{id}"
                 out.println "                    </foreach>"
@@ -312,7 +312,7 @@ def replace(reader, out, baseName, className, tableName, paramName, tableComment
                 out.println "            parameterType='${packageName}.model.${className}Model'>"
                 out.println "        select "
                 out.println "        <include refid='Base_Column_List'/>"
-                out.println "        from ${tableName} "
+                out.println "        from `${tableName}` "
                 out.println "        <where>"
                 out.println "            <include refid='query_filter'/>"
                 out.println "        </where>"
@@ -327,7 +327,7 @@ def replace(reader, out, baseName, className, tableName, paramName, tableComment
                 out.println "    <select id='selectByQuery' resultMap='BaseResultMap'>"
                 out.println "        select "
                 out.println "        <include refid='Base_Column_List'/>"
-                out.println "        from ${tableName} "
+                out.println "        from `${tableName}` "
                 out.println "        <where>"
                 out.println "            <include refid='query_filter'/>"
                 out.println "        </where>"
@@ -347,7 +347,7 @@ def replace(reader, out, baseName, className, tableName, paramName, tableComment
                             out.println "    <update id='deleteByPrimaryKey' parameterType='${it.parameterType}'>"
                         }
                     }
-                    out.println "        update ${tableName} set `${isDeleteProperties[0]}` = ${delete} where `id` = #{id}"
+                    out.println "        update `${tableName}` set `${isDeleteProperties[0]}` = ${delete} where `id` = #{id}"
                     out.println "    </update>"
                     out.println ""
                 } else {
@@ -356,11 +356,11 @@ def replace(reader, out, baseName, className, tableName, paramName, tableComment
                             out.println "    <delete id='deleteByPrimaryKey' parameterType='${it.parameterType}'>"
                         }
                     }
-                    out.println "        delete from ${tableName}"
+                    out.println "        delete from `${tableName}`"
                     out.println "        <where>"
                     out.println "            <choose>"
                     out.println "                <when test='id != null'>"
-                    out.println "                     ${tableName}.`id` = #{id}"
+                    out.println "                     `${tableName}`.`id` = #{id}"
                     out.println "                </when>"
                     out.println "                <otherwise>"
                     out.println "                    1 != 1"
@@ -377,7 +377,7 @@ def replace(reader, out, baseName, className, tableName, paramName, tableComment
                 if (fieldsContainProperties(isDeleteProperties, fields)) {
                     out.println ""
                     out.println "    <update id='deleteByQuery' parameterType='${packageName}.model.${className}Model'>"
-                    out.println "        update ${tableName} set `${isDeleteProperties[0]}` = ${delete}"
+                    out.println "        update `${tableName}` set `${isDeleteProperties[0]}` = ${delete}"
                     out.println "        <where>"
                     out.println "            <include refid='query_filter'/>"
                     out.println "        </where>"
@@ -386,7 +386,7 @@ def replace(reader, out, baseName, className, tableName, paramName, tableComment
                 } else {
                     out.println ""
                     out.println "    <delete id='deleteByQuery' parameterType='${packageName}.model.${className}Model'>"
-                    out.println "        delete from ${tableName}"
+                    out.println "        delete from `${tableName}`"
                     out.println "        <where>"
                     out.println "            <include refid='query_filter'/>"
                     out.println "        </where>"
@@ -399,7 +399,7 @@ def replace(reader, out, baseName, className, tableName, paramName, tableComment
 
                 out.println ""
                 out.println "    <select id='count' resultType='java.lang.Integer' parameterType='${packageName}.model.${className}Model'>"
-                out.println "        select count(*) from ${tableName}"
+                out.println "        select count(*) from `${tableName}`"
                 out.println "        <where>"
                 out.println "            <include refid='query_filter'/>"
                 out.println "        </where>"
@@ -411,7 +411,7 @@ def replace(reader, out, baseName, className, tableName, paramName, tableComment
 
                 out.println ""
                 out.println "    <insert id='insert' parameterType='${packageName}.model.${className}Model' useGeneratedKeys='true' keyProperty='id'>"
-                out.println "        insert into ${tableName}"
+                out.println "        insert into `${tableName}`"
                 out.println "        <trim prefix='(' suffix=')' suffixOverrides=','>"
                 fields.each() {
                     if (propertiesContainField(it, gmtCreate)) {
@@ -448,7 +448,7 @@ def replace(reader, out, baseName, className, tableName, paramName, tableComment
 
                 out.println ""
                 out.println "    <update id='fullUpdate' parameterType='${packageName}.model.${className}Model'>"
-                out.println "        update ${tableName}"
+                out.println "        update `${tableName}`"
                 out.println "        <set>"
                 fields.each() {
                     if (propertiesContainField(it, gmtCreate)) {
@@ -463,7 +463,7 @@ def replace(reader, out, baseName, className, tableName, paramName, tableComment
                 out.println "        <where>"
                 out.println "            <choose>"
                 out.println "                <when test='id != null'>"
-                out.println "                     ${tableName}.`id` = #{id}"
+                out.println "                     `${tableName}`.`id` = #{id}"
                 out.println "                </when>"
                 out.println "                <otherwise>"
                 out.println "                    1 != 1"
@@ -478,7 +478,7 @@ def replace(reader, out, baseName, className, tableName, paramName, tableComment
 
                 out.println ""
                 out.println "    <update id='incUpdate' parameterType='${packageName}.model.${className}Model'>"
-                out.println "        update ${tableName}"
+                out.println "        update `${tableName}`"
                 out.println "        <set>"
                 fields.each() {
                     if (propertiesContainField(it, gmtCreate)) {
@@ -493,7 +493,7 @@ def replace(reader, out, baseName, className, tableName, paramName, tableComment
                 out.println "        <where>"
                 out.println "            <choose>"
                 out.println "                <when test='id != null'>"
-                out.println "                     ${tableName}.`id` = #{id}"
+                out.println "                     `${tableName}`.`id` = #{id}"
                 out.println "                </when>"
                 out.println "                <otherwise>"
                 out.println "                    1 != 1"
