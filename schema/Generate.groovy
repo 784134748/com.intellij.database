@@ -14,14 +14,13 @@ import java.util.regex.Pattern
 
 packageName = ""
 basePackageName = ""
-baseMapprePath = "com.aidynamic.tj.core.base.BaseMapper"
-baseModePath = "com.aidynamic.tj.core.base.BaseModel"
+baseMapprePath = "com.wekj.frog.dao.base.BaseMapper"
 idProperties = ["id"] as String[]
 gmtCreate = ["gmt_create"] as String[]
 gmtModified = ["gmt_modified"] as String[]
 isDeleteProperties = ["is_delete"] as String[]
-delete = '\${@com.aidynamic.tj.core.enums.DeleteStatusEnum@YES.getKey()}'
-not_delete = '\${@com.aidynamic.tj.core.enums.DeleteStatusEnum@NO.getKey()}'
+delete = '\${@com.wekj.frog.dao.base.DeleteStatusEnum@YES.getKey()}'
+not_delete = '\${@com.wekj.frog.dao.base.DeleteStatusEnum@NO.getKey()}'
 javaTypeMapping = [
         (~/(?i)bigint/)           : "Long",
         (~/(?i)int|timestamp/)    : "Integer",
@@ -93,13 +92,13 @@ def generate(table, dir) {
     }
 
 
-    //创建model文件夹
-    def modelDir = dir.toString() + sepa + "model" + sepa
-    def modelPath = new File(modelDir)
-    modelPath.mkdirs()
-    //创建Model.java
-    def modelFile = new File(modelDir, className + "Model.java")
-    modelFile.withPrintWriter { out -> model(out, baseName, className, tableName, paramName, tableComment, fields) }
+    //创建dataObject文件夹
+    def dataObjectDir = dir.toString() + sepa + "dataobject" + sepa
+    def dataObjectPath = new File(dataObjectDir)
+    dataObjectPath.mkdirs()
+    //创建dataObject.java
+    def dataObjectFile = new File(dataObjectDir, className + "DO.java")
+    dataObjectFile.withPrintWriter { out -> dataObject(out, baseName, className, tableName, paramName, tableComment, fields) }
 
 
     //创建xml文件夹
@@ -128,26 +127,23 @@ def mapper(out, baseName, className, tableName, paramName, tableComment, fields)
     out.println "package ${packageName}.mapper;"
     out.println ""
     out.println "import ${baseMapprePath};"
-    out.println "import ${packageName}.model.${className}Model;"
+    out.println "import ${packageName}.dataobject.${className}DO;"
     out.println "import org.apache.ibatis.annotations.Mapper;"
     out.println "import org.springframework.stereotype.Repository;"
-    out.println ""
-    out.println "import java.util.List;"
     out.println ""
     out.println "/**"
     out.println " * @author "
     out.println " */"
     out.println "@Mapper"
     out.println "@Repository"
-    out.println "public interface ${className}Mapper extends ${baseName}BaseMapper<${className}Model> {"
+    out.println "public interface ${className}Mapper extends ${baseName}BaseMapper<${className}DO> {"
     out.println ""
     out.println "}"
 }
 
-def model(out, baseName, className, tableName, paramName, tableComment, fields) {
-    out.println "package ${packageName}.model;"
+def dataObject(out, baseName, className, tableName, paramName, tableComment, fields) {
+    out.println "package ${packageName}.dataobject;"
     out.println ""
-    out.println "import ${baseModePath};"
     out.println "import com.fasterxml.jackson.annotation.JsonFormat;"
     out.println "import io.swagger.annotations.ApiModel;"
     out.println "import io.swagger.annotations.ApiModelProperty;"
@@ -163,9 +159,8 @@ def model(out, baseName, className, tableName, paramName, tableComment, fields) 
     out.println "@Builder"
     out.println "@NoArgsConstructor"
     out.println "@AllArgsConstructor"
-    out.println "@EqualsAndHashCode(callSuper = true)"
-    out.println "@ApiModel(value = \"${className}Model\", description = \"${tableComment}\")"
-    out.println "public final class ${className}Model extends ${baseName}BaseModel implements Serializable {"
+    out.println "@ApiModel(value = \"${className}DO\", description = \"${tableComment}\")"
+    out.println "public final class ${className}DO implements Serializable {"
     out.println ""
     out.println "    public static final long serialVersionUID = 1L;"
     out.println ""
@@ -198,6 +193,7 @@ def xml(out, baseName, className, tableName, paramName, tableComment, fields) {
     out.println ""
     out.println "    <!--一串华丽的分割线,分割线内禁止任何形式的修改-->"
     out.println "    <!--一串华丽的分割线,分割线内禁止任何形式的修改-->"
+    out.println "    <!--========请将自定义的SQL语句放置在该分割线下方区域内========-->"
     out.println ""
     out.println "</mapper>"
 }
@@ -221,7 +217,7 @@ def replace(reader, out, baseName, className, tableName, paramName, tableComment
                  */
 
                 out.println ""
-                out.println "    <resultMap id='BaseResultMap' type='${packageName}.model.${className}Model'>"
+                out.println "    <resultMap id='BaseResultMap' type='${packageName}.dataobject.${className}DO'>"
                 out.println "        <constructor>"
                 fields.each() {
                     if (propertiesContainField(it, idProperties)) {
@@ -247,7 +243,7 @@ def replace(reader, out, baseName, className, tableName, paramName, tableComment
                     if (index != 0) {
                         out.print ", "
                     }
-                    out.print "`${tableName}`.`${it.colName}`"
+                    out.print "${tableName}.`${it.colName}`"
                     index++
                 }
                 out.println ""
@@ -266,17 +262,7 @@ def replace(reader, out, baseName, className, tableName, paramName, tableComment
                 }
                 out.println "        select "
                 out.println "        <include refid='Base_Column_List'/>"
-                out.println "        from `${tableName}`"
-                out.println "        <where>"
-                out.println "            <choose>"
-                out.println "                <when test='id != null'>"
-                out.println "                     `${tableName}`.`id` = #{id}"
-                out.println "                </when>"
-                out.println "                <otherwise>"
-                out.println "                    1 != 1"
-                out.println "                </otherwise>"
-                out.println "            </choose>"
-                out.println "        </where>"
+                out.println "        from ${tableName} where ${tableName}.`id` = #{id}"
                 out.println "    </select>"
 
                 /**
@@ -287,11 +273,11 @@ def replace(reader, out, baseName, className, tableName, paramName, tableComment
                 out.println "    <select id='batchSelectByPrimaryKey' resultMap='BaseResultMap' parameterType='ArrayList'>"
                 out.println "        select "
                 out.println "        <include refid='Base_Column_List'/>"
-                out.println "        from `${tableName}` "
+                out.println "        from ${tableName} "
                 out.println "        <where>"
                 out.println "            <choose>"
                 out.println "                <when test='ids != null and ids.length&gt;0'>"
-                out.println "                    `${tableName}`.`id` in"
+                out.println "                    ${tableName}.`id` in"
                 out.println "                    <foreach collection='ids' item='id' index='index' open='(' close=')' separator=','>"
                 out.println "                        #{id}"
                 out.println "                    </foreach>"
@@ -304,36 +290,18 @@ def replace(reader, out, baseName, className, tableName, paramName, tableComment
                 out.println "    </select>"
 
                 /**
-                 * selectOneByQuery
+                 * selectOne
                  */
 
                 out.println ""
-                out.println "    <select id='selectOneByQuery' resultMap='BaseResultMap'"
-                out.println "            parameterType='${packageName}.model.${className}Model'>"
+                out.println "    <select id='selectOne' resultMap='BaseResultMap'>"
                 out.println "        select "
                 out.println "        <include refid='Base_Column_List'/>"
-                out.println "        from `${tableName}` "
+                out.println "        from ${tableName} "
                 out.println "        <where>"
                 out.println "            <include refid='query_filter'/>"
                 out.println "        </where>"
-                out.println "        Limit 1"
-                out.println "    </select>"
-
-                /**
-                 * selectByQuery
-                 */
-
-                out.println ""
-                out.println "    <select id='selectByQuery' resultMap='BaseResultMap'>"
-                out.println "        select "
-                out.println "        <include refid='Base_Column_List'/>"
-                out.println "        from `${tableName}` "
-                out.println "        <where>"
-                out.println "            <include refid='query_filter'/>"
-                out.println "        </where>"
-                out.println "        <if test='start != null and end != null'>"
-                out.println "            limit #{start}, #{end}"
-                out.println "        </if>"
+                out.println "        limit 1"
                 out.println "    </select>"
 
                 /**
@@ -347,159 +315,74 @@ def replace(reader, out, baseName, className, tableName, paramName, tableComment
                             out.println "    <update id='deleteByPrimaryKey' parameterType='${it.parameterType}'>"
                         }
                     }
-                    out.println "        update `${tableName}` set `${isDeleteProperties[0]}` = ${delete} where `id` = #{id}"
+                    out.println "        update ${tableName} set `${isDeleteProperties[0]}` = ${delete} where `id` = #{id}"
                     out.println "    </update>"
-                    out.println ""
                 } else {
                     fields.each() {
                         if (propertiesContainField(it, idProperties)) {
                             out.println "    <delete id='deleteByPrimaryKey' parameterType='${it.parameterType}'>"
                         }
                     }
-                    out.println "        delete from `${tableName}`"
-                    out.println "        <where>"
-                    out.println "            <choose>"
-                    out.println "                <when test='id != null'>"
-                    out.println "                     `${tableName}`.`id` = #{id}"
-                    out.println "                </when>"
-                    out.println "                <otherwise>"
-                    out.println "                    1 != 1"
-                    out.println "                </otherwise>"
-                    out.println "            </choose>"
-                    out.println "        </where>"
+                    out.println "        delete from ${tableName} where ${tableName}.`id` = #{id}"
                     out.println "    </delete>"
                 }
-
-                /**
-                 * deleteByQuery
-                 */
-
-                if (fieldsContainProperties(isDeleteProperties, fields)) {
-                    out.println ""
-                    out.println "    <update id='deleteByQuery' parameterType='${packageName}.model.${className}Model'>"
-                    out.println "        update `${tableName}` set `${isDeleteProperties[0]}` = ${delete}"
-                    out.println "        <where>"
-                    out.println "            <include refid='query_filter'/>"
-                    out.println "        </where>"
-                    out.println "    </update>"
-                    out.println ""
-                } else {
-                    out.println ""
-                    out.println "    <delete id='deleteByQuery' parameterType='${packageName}.model.${className}Model'>"
-                    out.println "        delete from `${tableName}`"
-                    out.println "        <where>"
-                    out.println "            <include refid='query_filter'/>"
-                    out.println "        </where>"
-                    out.println "    </delete>"
-                }
-
-                /**
-                 * count
-                 */
-
-                out.println ""
-                out.println "    <select id='count' resultType='java.lang.Integer' parameterType='${packageName}.model.${className}Model'>"
-                out.println "        select count(*) from `${tableName}`"
-                out.println "        <where>"
-                out.println "            <include refid='query_filter'/>"
-                out.println "        </where>"
-                out.println "    </select>"
 
                 /**
                  * insert
                  */
 
                 out.println ""
-                out.println "    <insert id='insert' parameterType='${packageName}.model.${className}Model' useGeneratedKeys='true' keyProperty='id'>"
-                out.println "        insert into `${tableName}`"
+                out.println "    <insert id='insert' parameterType='${packageName}.dataobject.${className}DO' useGeneratedKeys='true' keyProperty='id'>"
+                out.println "        insert into ${tableName}"
                 out.println "        <trim prefix='(' suffix=')' suffixOverrides=','>"
                 fields.each() {
                     if (propertiesContainField(it, gmtCreate)) {
-                        out.println "            `${it.colName}`,"
+                        // 忽略创建时间
                     } else if (propertiesContainField(it, gmtModified)) {
-                        out.println "            `${it.colName}`,"
+                        // 忽略变更时间
                     } else if (propertiesContainField(it, isDeleteProperties)) {
                         out.println "            `${it.colName}`,"
-                    } else if (it.javaType == "String") {
-                        out.println "            <if test='${it.javaName} != null'>`${it.colName}`,</if>"
                     } else {
-                        out.println "            <if test='${it.javaName} != null'>`${it.colName}`,</if>"
+                        out.println "            `${it.colName}`,"
                     }
                 }
                 out.println "        </trim>"
                 out.println "        <trim prefix='values (' suffix=')' suffixOverrides=','>"
                 fields.each() {
                     if (propertiesContainField(it, gmtCreate)) {
-                        out.println "            now(),"
+                        // 忽略创建时间
                     } else if (propertiesContainField(it, gmtModified)) {
-                        out.println "            now(),"
+                        // 忽略变更时间
                     } else if (propertiesContainField(it, isDeleteProperties)) {
                         out.println "            ${not_delete},"
                     } else {
-                        out.println "            <if test='${it.javaName} != null'>#{${it.javaName}},</if>"
+                        out.println "            #{${it.javaName}},"
                     }
                 }
                 out.println "        </trim>"
                 out.println "    </insert>"
 
                 /**
-                 * full_update
-                 */
-
-                out.println ""
-                out.println "    <update id='fullUpdate' parameterType='${packageName}.model.${className}Model'>"
-                out.println "        update `${tableName}`"
-                out.println "        <set>"
-                fields.each() {
-                    if (propertiesContainField(it, gmtCreate)) {
-                    } else if (propertiesContainField(it, idProperties)) {
-                    } else if (propertiesContainField(it, gmtModified)) {
-                        out.println "            `${it.colName}` = now(),"
-                    } else {
-                        out.println "            `${it.colName}` = #{${it.javaName}},"
-                    }
-                }
-                out.println "        </set>"
-                out.println "        <where>"
-                out.println "            <choose>"
-                out.println "                <when test='id != null'>"
-                out.println "                     `${tableName}`.`id` = #{id}"
-                out.println "                </when>"
-                out.println "                <otherwise>"
-                out.println "                    1 != 1"
-                out.println "                </otherwise>"
-                out.println "            </choose>"
-                out.println "        </where>"
-                out.println "    </update>"
-
-                /**
                  * inc_update
                  */
 
                 out.println ""
-                out.println "    <update id='incUpdate' parameterType='${packageName}.model.${className}Model'>"
-                out.println "        update `${tableName}`"
+                out.println "    <update id='incUpdate' parameterType='${packageName}.dataobject.${className}DO'>"
+                out.println "        update ${tableName}"
                 out.println "        <set>"
                 fields.each() {
-                    if (propertiesContainField(it, gmtCreate)) {
-                    } else if (propertiesContainField(it, idProperties)) {
+                    if (propertiesContainField(it, idProperties)) {
+                        // 忽略主键ID
+                    } else if (propertiesContainField(it, gmtCreate)) {
+                        // 忽略创建时间
                     } else if (propertiesContainField(it, gmtModified)) {
-                        out.println "            `${it.colName}` = now(),"
+                        // 忽略变更时间
                     } else {
                         out.println "            <if test='${it.javaName} != null'>`${it.colName}` = #{${it.javaName}},</if>"
                     }
                 }
                 out.println "        </set>"
-                out.println "        <where>"
-                out.println "            <choose>"
-                out.println "                <when test='id != null'>"
-                out.println "                     `${tableName}`.`id` = #{id}"
-                out.println "                </when>"
-                out.println "                <otherwise>"
-                out.println "                    1 != 1"
-                out.println "                </otherwise>"
-                out.println "            </choose>"
-                out.println "        </where>"
+                out.println "        where ${tableName}.`id` = #{id}"
                 out.println "    </update>"
 
                 /**
@@ -510,7 +393,12 @@ def replace(reader, out, baseName, className, tableName, paramName, tableComment
                 out.println "    <sql id='query_filter'>"
                 fields.each() {
                     if (propertiesContainField(it, isDeleteProperties)) {
-                        out.println "        and `${it.colName}` = ${not_delete}"
+                        out.println "        <if test='t.${it.javaName} == null'>and `${it.colName}` = ${not_delete}</if>"
+                        out.println "        <if test='t.${it.javaName} != null'>and `${it.colName}` = #{t.${it.javaName}}</if>"
+                    } else if (propertiesContainField(it, gmtCreate)) {
+                        // 忽略创建时间
+                    } else if (propertiesContainField(it, gmtModified)) {
+                        // 忽略变更时间
                     } else {
                         out.println "        <if test='t.${it.javaName} != null'>and `${it.colName}` = #{t.${it.javaName}}</if>"
                     }
@@ -609,4 +497,3 @@ def tableName(str, capitalize) {
             .replaceAll(/[^\p{javaJavaIdentifierPart}[_]]/, "_")
     capitalize || s.length() == 1 ? s : Case.LOWER.apply(s[0]) + s[1..-1]
 }
-
