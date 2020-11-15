@@ -14,13 +14,13 @@ import java.util.regex.Pattern
 
 packageName = ""
 basePackageName = ""
-baseMapprePath = "com.wekj.frog.dao.base.BaseMapper"
+baseMapprePath = "com.wekj.fashion.dao.base.BaseMapper"
 idProperties = ["id"] as String[]
 gmtCreate = ["gmt_create"] as String[]
 gmtModified = ["gmt_modified"] as String[]
 isDeleteProperties = ["is_delete"] as String[]
-delete = '\${@com.wekj.frog.dao.base.DeleteStatusEnum@YES.getKey()}'
-not_delete = '\${@com.wekj.frog.dao.base.DeleteStatusEnum@NO.getKey()}'
+delete = '\${@com.wekj.fashion.common.enums.GeneralEnum@YES.getKey()}'
+not_delete = '\${@com.wekj.fashion.common.enums.GeneralEnum@NO.getKey()}'
 javaTypeMapping = [
         (~/(?i)bigint/)           : "Long",
         (~/(?i)int|timestamp/)    : "Integer",
@@ -270,13 +270,13 @@ def replace(reader, out, baseName, className, tableName, paramName, tableComment
                  */
 
                 out.println ""
-                out.println "    <select id='batchSelectByPrimaryKey' resultMap='BaseResultMap' parameterType='ArrayList'>"
+                out.println "    <select id='batchSelectByPrimaryKey' resultMap='BaseResultMap' parameterType='Collection'>"
                 out.println "        select "
                 out.println "        <include refid='Base_Column_List'/>"
                 out.println "        from ${tableName} "
                 out.println "        <where>"
                 out.println "            <choose>"
-                out.println "                <when test='ids != null and ids.length&gt;0'>"
+                out.println "                <when test='ids != null and ids.size&gt;0'>"
                 out.println "                    ${tableName}.`id` in"
                 out.println "                    <foreach collection='ids' item='id' index='index' open='(' close=')' separator=','>"
                 out.println "                        #{id}"
