@@ -341,9 +341,9 @@ def replace(reader, out, baseName, className, tableName, paramName, tableComment
                     } else if (propertiesContainField(it, gmtModified)) {
                         // 忽略变更时间
                     } else if (propertiesContainField(it, isDeleteProperties)) {
-                        out.println "            `${it.colName}`,"
+                        out.println "            <if test='${it.javaName} != null'>`${it.colName}`,</if>"
                     } else {
-                        out.println "            `${it.colName}`,"
+                        out.println "            <if test='${it.javaName} != null'>`${it.colName}`,</if>"
                     }
                 }
                 out.println "        </trim>"
@@ -356,7 +356,7 @@ def replace(reader, out, baseName, className, tableName, paramName, tableComment
                     } else if (propertiesContainField(it, isDeleteProperties)) {
                         out.println "            ${not_delete},"
                     } else {
-                        out.println "            #{${it.javaName}},"
+                        out.println "            <if test='${it.javaName} != null'>#{${it.javaName}},</if>"
                     }
                 }
                 out.println "        </trim>"
