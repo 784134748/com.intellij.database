@@ -341,7 +341,7 @@ def replace(reader, out, baseName, className, tableName, paramName, tableComment
                     } else if (propertiesContainField(it, gmtModified)) {
                         // 忽略变更时间
                     } else if (propertiesContainField(it, isDeleteProperties)) {
-                        out.println "            <if test='${it.javaName} != null'>`${it.colName}`,</if>"
+                        out.println "            ${it.colName}"
                     } else {
                         out.println "            <if test='${it.javaName} != null'>`${it.colName}`,</if>"
                     }
