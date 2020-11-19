@@ -1,2 +1,11 @@
+target/
+*.iml
+.idea/
 
-schema/Generate POJOs.groovy
+# Eclipse
+.settings/
+.classpath
+.project
+
+#  VSCode
+.factorypath
